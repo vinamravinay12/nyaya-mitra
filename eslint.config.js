@@ -1,9 +1,11 @@
 import js from '@eslint/js';
+import jsxA11y from 'eslint-plugin-jsx-a11y';
+import reactHooks from 'eslint-plugin-react-hooks';
 import { defineConfig, globalIgnores } from 'eslint/config';
 import tseslint from 'typescript-eslint';
 
 export default defineConfig([
-  globalIgnores(['**/dist/**', '**/coverage/**']),
+  globalIgnores(['**/dist/**', '**/dist-tsc/**', '**/coverage/**']),
   js.configs.recommended,
   tseslint.configs.strictTypeChecked,
   tseslint.configs.stylisticTypeChecked,
@@ -12,7 +14,11 @@ export default defineConfig([
       parserOptions: {
         projectService: {
           // Root-level config files sit outside the package tsconfigs.
-          allowDefaultProject: ['eslint.config.js', 'vitest.config.ts'],
+          allowDefaultProject: [
+            'eslint.config.js',
+            'vitest.config.ts',
+            'packages/client/vite.config.ts',
+          ],
         },
       },
     },
@@ -23,7 +29,26 @@ export default defineConfig([
       'max-lines-per-function': ['error', { max: 60, skipBlankLines: true, skipComments: true }],
       complexity: ['error', 12],
       eqeqeq: ['error', 'always'],
+      // Express identifies an error handler by its 4-argument shape, so unused
+      // trailing parameters are load-bearing.
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
       'no-console': 'error',
+    },
+  },
+  {
+    // Accessibility rules are errors, not warnings: a warning is a rule nobody
+    // fixes. These run over every component in the client.
+    files: ['packages/client/src/**/*.tsx'],
+    extends: [
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access -- jsx-a11y ships no type declarations
+      jsxA11y.flatConfigs.strict,
+      reactHooks.configs.flat['recommended-latest'],
+    ],
+    languageOptions: {
+      parserOptions: { ecmaFeatures: { jsx: true } },
     },
   },
   {
@@ -33,7 +58,14 @@ export default defineConfig([
     rules: { 'max-lines': 'off' },
   },
   {
-    files: ['**/*.test.ts'],
-    rules: { 'max-lines': 'off', 'max-lines-per-function': 'off' },
+    files: ['**/*.test.ts', '**/*.test.tsx'],
+    rules: {
+      'max-lines': 'off',
+      'max-lines-per-function': 'off',
+      // supertest types `response.body` as `any` by design; asserting on it is
+      // the point of an HTTP test.
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+    },
   },
 ]);

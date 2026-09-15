@@ -83,6 +83,8 @@ export const rentalDepositWithheld: Playbook = {
   ],
 
   derivedFacts: ['stateAdoptedModelTenancyAct'],
+  amountAtStakeFact: 'amountWithheldInr',
+  lawyerSpecialisation: 'Civil litigation (landlord–tenant)',
 
   governingLaw: [
     {
@@ -130,6 +132,7 @@ export const rentalDepositWithheld: Playbook = {
       },
       fromFact: 'vacateDate',
       durationDays: 1095,
+      appliesWhen: null,
     },
     {
       id: 'rental.deposit.dispossession_claim',
@@ -142,6 +145,8 @@ export const rentalDepositWithheld: Playbook = {
       },
       fromFact: 'vacateDate',
       durationDays: 182,
+      // Only relevant if there was actually a lockout.
+      appliesWhen: { op: 'isTrue', fact: 'landlordChangedLocks' },
     },
   ],
 
@@ -184,8 +189,10 @@ export const rentalDepositWithheld: Playbook = {
       maxDays: 180,
       effort: 'medium',
       availableWhen: { op: 'isTrue', fact: 'stateAdoptedModelTenancyAct' },
+      // We do not yet derive adoption from the state, so this must not assert
+      // that the state has *not* adopted it — only that we cannot confirm it.
       unavailableReason:
-        'Your state has not adopted the Model Tenancy Act, so there is no Rent Authority to apply to.',
+        'This route only exists where the state has adopted the Model Tenancy Act. We have not confirmed that for your state — ask your local Rent Authority before ruling it out.',
     },
     {
       id: 'lok-adalat',

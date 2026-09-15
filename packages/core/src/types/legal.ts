@@ -1,5 +1,6 @@
 /** References into the statute corpus, and the clocks that run against a claim. */
 
+import type { Condition } from './condition.js';
 import type { FactId } from './facts.js';
 
 export interface LegalReference {
@@ -24,4 +25,12 @@ export interface LimitationRule {
   readonly reference: LegalReference;
   readonly fromFact: FactId;
   readonly durationDays: number;
+  /**
+   * When this clock is relevant at all. `null` means always.
+   *
+   * Without this, a playbook shows every deadline it knows about to every user
+   * — including remedies their facts rule out, which is noise at best and
+   * needlessly alarming at worst.
+   */
+  readonly appliesWhen: Condition | null;
 }

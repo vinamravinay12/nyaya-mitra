@@ -54,6 +54,9 @@ describe.each(playbooks.map((playbook) => [playbook.id, playbook] as const))(
         ...playbook.routes.flatMap((route) =>
           route.availableWhen ? collectConditionFacts(route.availableWhen) : [],
         ),
+        ...playbook.limitations.flatMap((limitation) =>
+          limitation.appliesWhen ? collectConditionFacts(limitation.appliesWhen) : [],
+        ),
       ];
       for (const factId of referenced) {
         expect(known, `condition references undeclared fact "${factId}"`).toContain(factId);
@@ -86,6 +89,20 @@ describe.each(playbooks.map((playbook) => [playbook.id, playbook] as const))(
           expect(route.availableWhen).toBeDefined();
         }
       }
+    });
+
+    it('points its money fact at a money question it actually asks', () => {
+      if (playbook.amountAtStakeFact === null) {
+        return;
+      }
+      const moneyFacts = playbook.decisiveFacts
+        .filter((fact) => fact.kind === 'money')
+        .map((fact) => fact.id);
+      expect(moneyFacts).toContain(playbook.amountAtStakeFact);
+    });
+
+    it('names the kind of lawyer it would escalate to', () => {
+      expect(playbook.lawyerSpecialisation.length).toBeGreaterThan(0);
     });
 
     it('escalates every red flag to a named specialisation', () => {

@@ -34,6 +34,10 @@ export interface Playbook {
   readonly decisiveFacts: readonly DecisiveFact[];
   /** Facts the engine computes rather than asks — e.g. whether a state adopted an Act. */
   readonly derivedFacts: readonly FactId[];
+  /** The money fact that decides whether professional help is proportionate, if any. */
+  readonly amountAtStakeFact: FactId | null;
+  /** The kind of lawyer this situation needs when it escalates. */
+  readonly lawyerSpecialisation: string;
   readonly governingLaw: readonly LegalReference[];
   readonly limitations: readonly LimitationRule[];
   readonly redFlags: readonly RedFlag[];

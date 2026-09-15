@@ -1,0 +1,21 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-ink: oklch(0.22 0.02 260);
+  --color-muted: oklch(0.48 0.02 260);
+  --color-surface: oklch(0.99 0.004 260);
+  --color-line: oklch(0.9 0.008 260);
+  --color-brand: oklch(0.48 0.13 255);
+}
+
+/* Respect the reader's motion preference rather than assuming animation is welcome. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
