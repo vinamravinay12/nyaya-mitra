@@ -27,3 +27,20 @@ export function nextQuestion(playbook: Playbook, facts: CaseFacts): DecisiveFact
 export function isReadyToAssess(playbook: Playbook, facts: CaseFacts): boolean {
   return findMissingFacts(playbook, facts).length === 0;
 }
+
+export interface IntakeProgress {
+  readonly answered: number;
+  readonly total: number;
+}
+
+/**
+ * How far through the required questions the user is.
+ *
+ * Counts only required facts: optional ones never block, so including them would
+ * show a total the user can never reach.
+ */
+export function intakeProgress(playbook: Playbook, facts: CaseFacts): IntakeProgress {
+  const required = playbook.decisiveFacts.filter((fact) => fact.required);
+  const outstanding = required.filter((fact) => !isAnswered(facts, fact.id)).length;
+  return { answered: required.length - outstanding, total: required.length };
+}

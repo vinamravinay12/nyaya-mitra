@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { classifyScenario, requestAssessment } from './client.js';
+import { classifyScenario, fetchPlaybooks, requestAssessment } from './client.js';
 import { ApiError } from './types.js';
 
 const mockFetch = (implementation: () => Promise<Response> | Response): void => {
@@ -70,5 +70,31 @@ describe('requestAssessment', () => {
     await expect(requestAssessment('nope', {}, '2026-09-15')).rejects.toThrow(
       'Something went wrong',
     );
+  });
+});
+
+describe('fetchPlaybooks', () => {
+  it('returns the catalogue', async () => {
+    const playbooks = [{ id: 'rental.deposit_withheld', title: 'Deposit withheld' }];
+    mockFetch(() => jsonResponse({ playbooks }));
+    await expect(fetchPlaybooks()).resolves.toEqual(playbooks);
+  });
+
+  it('returns nothing rather than throwing when the catalogue is unavailable', async () => {
+    mockFetch(() => Promise.reject(new TypeError('Failed to fetch')));
+    await expect(fetchPlaybooks()).resolves.toEqual([]);
+
+    mockFetch(() => jsonResponse({}, 500));
+    await expect(fetchPlaybooks()).resolves.toEqual([]);
+  });
+
+  it('survives a response body that is not JSON', async () => {
+    mockFetch(() => new Response('<html>gateway</html>', { status: 200 }));
+    await expect(fetchPlaybooks()).resolves.toEqual([]);
+  });
+
+  it('survives a JSON body with no playbooks key', async () => {
+    mockFetch(() => jsonResponse({ unexpected: true }));
+    await expect(fetchPlaybooks()).resolves.toEqual([]);
   });
 });

@@ -15,6 +15,8 @@ export const cyberUnauthorisedTransaction: Playbook = {
   domain: 'cyber-fraud',
   title: 'Money was taken from my account without my permission',
   summary: 'An unauthorised UPI, card or net-banking transaction has debited your account.',
+  examplePrompt:
+    'Someone used my debit card and ₹45,000 was taken from my account yesterday. I have not told my bank yet.',
 
   decisiveFacts: [
     {

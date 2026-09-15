@@ -17,7 +17,7 @@ export function InjectionWarning({
   return (
     <aside
       aria-labelledby="injection-heading"
-      className="rounded-md border border-amber-600 bg-amber-50 p-4 text-sm text-amber-900"
+      className="rounded-xl border border-warn-border bg-warn-bg p-4 text-sm text-warn-fg"
     >
       <h2 id="injection-heading" className="font-medium">
         Something in that text looked like an instruction

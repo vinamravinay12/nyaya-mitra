@@ -1,4 +1,4 @@
-import type { TriageBand } from '@nyaya-mitra/core';
+import type { FactKind, FactValue, TriageBand } from '@nyaya-mitra/core';
 
 /** Indian grouping: ₹5,00,000 rather than ₹500,000. */
 export function formatRupees(amount: number): string {
@@ -27,4 +27,15 @@ export function formatDaysRemaining(daysRemaining: number): string {
     return `${String(Math.abs(daysRemaining))} days ago`;
   }
   return daysRemaining === 0 ? 'today' : `${String(daysRemaining)} days left`;
+}
+
+/** Renders an answer the way the user gave it, for the review list. */
+export function formatFactValue(kind: FactKind, value: FactValue): string {
+  if (typeof value === 'boolean') {
+    return value ? 'Yes' : 'No';
+  }
+  if (typeof value === 'number') {
+    return kind === 'money' ? formatRupees(value) : String(value);
+  }
+  return value ?? '';
 }

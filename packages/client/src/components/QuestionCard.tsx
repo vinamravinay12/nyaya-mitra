@@ -15,9 +15,9 @@ const INPUT_TYPES: Record<FactKind, string> = {
   boolean: 'text',
 };
 
-const CARD = 'rounded-lg border border-line p-5';
-const HELP = 'mt-1 text-sm text-muted';
-const PROMPT = 'text-lg font-medium text-ink';
+const CARD = 'card p-6 sm:p-7';
+const HELP = 'mt-2 text-sm leading-relaxed text-muted';
+const PROMPT = 'text-xl font-semibold text-balance text-ink';
 
 /** Yes/no gets a fieldset so the pair is announced as one grouped question. */
 function BooleanQuestion({ fact, onAnswer }: QuestionCardProps): React.JSX.Element {
@@ -37,7 +37,7 @@ function BooleanQuestion({ fact, onAnswer }: QuestionCardProps): React.JSX.Eleme
               onClick={() => {
                 onAnswer(value);
               }}
-              className="rounded-md border border-line px-5 py-2 font-medium text-ink hover:border-brand focus:outline-2 focus:outline-brand"
+              className="min-w-24 rounded-xl border border-line bg-card px-6 py-3 font-semibold text-ink-soft transition-colors hover:border-brand hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
             >
               {value ? 'Yes' : 'No'}
             </button>
@@ -79,9 +79,12 @@ function ValueQuestion({ fact, onAnswer }: QuestionCardProps): React.JSX.Element
             setValue(event.target.value);
           }}
           required
-          className="flex-1 rounded-md border border-line p-2.5 text-ink focus:outline-2 focus:outline-brand"
+          className="flex-1 rounded-xl border border-line bg-surface/60 px-4 py-3 text-ink focus:border-brand focus:bg-card focus:outline-2 focus:outline-offset-1 focus:outline-brand"
         />
-        <button type="submit" className="rounded-md bg-brand px-5 py-2 font-medium text-white">
+        <button
+          type="submit"
+          className="rounded-xl bg-brand px-6 py-3 font-semibold text-card transition-colors hover:bg-brand-deep"
+        >
           Next
         </button>
       </form>

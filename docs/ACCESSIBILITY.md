@@ -62,6 +62,16 @@ because jsdom has no layout engine: the axe assertions in the test suite
 structurally cannot see touch-target size (WCAG 2.5.8) or computed colour
 contrast, and only a real browser can.
 
+### Contrast is a token-level guarantee
+
+`--color-muted` is set so that secondary text clears 4.5:1 on **every** surface
+in the system — white cards, the page ground, and the warm accent tint alike. An
+earlier value passed on white and failed at 4.44:1 on the tint; see
+[lighthouse-results.md](lighthouse-results.md).
+
+Typography is self-hosted (Inter, OFL), which keeps `font-src 'self'` in the CSP
+and means no third party learns who is reading a page about their legal problem.
+
 ## Known gaps
 
 - **No screen-reader testing** with NVDA, JAWS or VoiceOver.

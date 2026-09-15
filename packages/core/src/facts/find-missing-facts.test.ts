@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   findMissingFacts,
   findOptionalGaps,
+  intakeProgress,
   isReadyToAssess,
   nextQuestion,
 } from './find-missing-facts.js';
@@ -81,5 +82,41 @@ describe('nextQuestion and isReadyToAssess', () => {
 
   it('is not ready while anything required is outstanding', () => {
     expect(isReadyToAssess(rentalDepositWithheld, {})).toBe(false);
+  });
+});
+
+describe('intakeProgress', () => {
+  const requiredCount = rentalDepositWithheld.decisiveFacts.filter((fact) => fact.required).length;
+
+  it('starts at zero answered', () => {
+    expect(intakeProgress(rentalDepositWithheld, {})).toEqual({
+      answered: 0,
+      total: requiredCount,
+    });
+  });
+
+  it('advances as required facts arrive', () => {
+    expect(intakeProgress(rentalDepositWithheld, { state: 'Goa' }).answered).toBe(1);
+    expect(
+      intakeProgress(rentalDepositWithheld, { state: 'Goa', vacateDate: '2026-07-01' }).answered,
+    ).toBe(2);
+  });
+
+  it('reaches the total when the intake is complete', () => {
+    expect(intakeProgress(rentalDepositWithheld, allRequired)).toEqual({
+      answered: requiredCount,
+      total: requiredCount,
+    });
+  });
+
+  it('ignores optional facts so the total is always reachable', () => {
+    const withOptional = { ...allRequired, landlordChangedLocks: true };
+    expect(intakeProgress(rentalDepositWithheld, withOptional).total).toBe(requiredCount);
+  });
+
+  it('does not count a cleared answer', () => {
+    expect(intakeProgress(rentalDepositWithheld, { ...allRequired, state: null }).answered).toBe(
+      requiredCount - 1,
+    );
   });
 });

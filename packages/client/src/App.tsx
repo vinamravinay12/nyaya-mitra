@@ -1,4 +1,5 @@
 import { Disclaimer } from './components/Disclaimer.js';
+import { ScaleIcon } from './icons/index.js';
 import { SkipLink } from './components/SkipLink.js';
 import { StageView } from './components/StageView.js';
 import { useSession } from './state/use-session.js';
@@ -9,10 +10,17 @@ export function App(): React.JSX.Element {
   return (
     <>
       <SkipLink />
-      <div className="mx-auto max-w-3xl px-4 py-10">
-        <header className="mb-8">
-          <p className="text-sm font-medium tracking-wide text-brand uppercase">Nyaya Mitra</p>
-          <p className="text-muted">Everyday legal problems in India, explained.</p>
+      <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
+        <header className="mb-8 flex items-center gap-2.5">
+          <span className="inline-flex size-9 items-center justify-center rounded-xl bg-brand text-card">
+            <ScaleIcon className="size-5" />
+          </span>
+          <span>
+            <span className="block leading-tight font-semibold text-ink">Nyaya Mitra</span>
+            <span className="block text-xs leading-tight text-muted">
+              Everyday legal problems in India
+            </span>
+          </span>
         </header>
 
         <main id="main" className="space-y-8">
@@ -26,7 +34,7 @@ export function App(): React.JSX.Element {
             <button
               type="button"
               onClick={session.restart}
-              className="rounded-md border border-line px-4 py-2 text-ink"
+              className="rounded-xl border border-line bg-card px-5 py-2.5 font-medium text-ink-soft transition-colors hover:border-brand/40 hover:text-brand"
             >
               Start again
             </button>

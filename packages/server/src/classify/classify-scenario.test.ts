@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { playbooks } from '@nyaya-mitra/core';
-import { MIN_CONFIDENCE, classifyScenario, retainDeclaredFacts } from './classify-scenario.js';
+import {
+  MIN_CONFIDENCE,
+  classifyScenario,
+  isValidForFact,
+  retainDeclaredFacts,
+} from './classify-scenario.js';
+import type { DecisiveFact } from '@nyaya-mitra/core';
 import type { LlmClient } from '../llm/llm-client.js';
 
 const respondWith = (payload: unknown): LlmClient => ({
@@ -38,6 +44,64 @@ describe('retainDeclaredFacts', () => {
     expect(retainDeclaredFacts(playbook, { state: 'Goa', landlordMood: 'angry' })).toEqual({
       state: 'Goa',
     });
+  });
+
+  it('drops a value that is the wrong shape for the fact it answers', () => {
+    if (!playbook) return;
+    const kept = retainDeclaredFacts(playbook, {
+      state: 'Goa',
+      vacateDate: 'sometime in July',
+      depositAmountInr: 'eighty thousand',
+      writtenAgreement: 'yes',
+    });
+    expect(kept).toEqual({ state: 'Goa' });
+  });
+});
+
+describe('isValidForFact', () => {
+  const fact = (over: Partial<DecisiveFact>): DecisiveFact => ({
+    id: 'f',
+    kind: 'text',
+    question: 'q',
+    why: 'w',
+    required: true,
+    ...over,
+  });
+
+  it('accepts only real booleans for a boolean fact', () => {
+    expect(isValidForFact(fact({ kind: 'boolean' }), true)).toBe(true);
+    expect(isValidForFact(fact({ kind: 'boolean' }), 'yes')).toBe(false);
+    expect(isValidForFact(fact({ kind: 'boolean' }), 1)).toBe(false);
+  });
+
+  it('accepts only finite numbers for a money fact', () => {
+    expect(isValidForFact(fact({ kind: 'money' }), 80_000)).toBe(true);
+    expect(isValidForFact(fact({ kind: 'money' }), '80000')).toBe(false);
+    expect(isValidForFact(fact({ kind: 'money' }), Number.NaN)).toBe(false);
+  });
+
+  it('accepts only real calendar dates for a date fact', () => {
+    expect(isValidForFact(fact({ kind: 'date' }), '2026-07-01')).toBe(true);
+    expect(isValidForFact(fact({ kind: 'date' }), '2026-02-30')).toBe(false);
+    expect(isValidForFact(fact({ kind: 'date' }), 'last July')).toBe(false);
+  });
+
+  it('accepts only a declared option for an enum fact', () => {
+    const enumFact = fact({ kind: 'enum', options: ['resigned', 'terminated'] });
+    expect(isValidForFact(enumFact, 'terminated')).toBe(true);
+    // The exact failure seen in the wild: the model answers in its own words.
+    expect(isValidForFact(enumFact, 'non-compete')).toBe(false);
+    expect(isValidForFact(enumFact, 42)).toBe(false);
+  });
+
+  it('treats an enum with no options declared as unanswerable', () => {
+    expect(isValidForFact(fact({ kind: 'enum' }), 'anything')).toBe(false);
+  });
+
+  it('accepts only non-empty text for a text fact', () => {
+    expect(isValidForFact(fact({}), 'Karnataka')).toBe(true);
+    expect(isValidForFact(fact({}), '   ')).toBe(false);
+    expect(isValidForFact(fact({}), null)).toBe(false);
   });
 });
 

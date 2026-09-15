@@ -39,7 +39,7 @@ describe('RouteList', () => {
   it('keeps a closed route visible and explains why it is closed', () => {
     render(<RouteList routes={[open, closed]} />);
     expect(screen.getByText(/File a summary suit/)).toBeInTheDocument();
-    expect(screen.getByText('(not open to you)')).toBeInTheDocument();
+    expect(screen.getByText(/not open to you/)).toBeInTheDocument();
     expect(screen.getByText(/needs a written contract/)).toBeInTheDocument();
   });
 

@@ -200,8 +200,14 @@ does less.
 - **The refusal screen does not signpost support services.** Someone disclosing a
   threat is correctly routed away as out of scope, but is not yet pointed toward
   legal aid or a helpline.
-- **Five situations, not five domains.** Each domain currently has one playbook,
-  covering its most common case rather than the whole area.
+- **Twelve situations, not complete coverage.** Housing and employment are
+  covered in depth; consumer, fraud and money recovery still have one playbook
+  each, covering the most common case rather than the whole area.
+- **Workplace harassment is deliberately absent.** The POSH Act route through an
+  Internal Committee is exactly the kind of under-known remedy this product
+  exists to surface, but getting triage wrong there causes real harm, and the
+  refusal screen does not yet signpost support services. It should be added
+  deliberately, with that signposting in place first.
 
 ## Licence
 

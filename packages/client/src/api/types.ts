@@ -10,6 +10,13 @@ export interface CoveredSituation {
   readonly title: string;
 }
 
+/** The catalogue entry the landing page renders. */
+export interface PlaybookSummary extends CoveredSituation {
+  readonly domain: string;
+  readonly summary: string;
+  readonly examplePrompt: string;
+}
+
 export type ClassifyResponse =
   | { readonly kind: 'out-of-scope'; readonly reason: string }
   | {

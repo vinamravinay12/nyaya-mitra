@@ -104,6 +104,78 @@ describe('sessionReducer', () => {
     expect(next).toMatchObject({ stage: 'error', message: 'oops', busy: false });
   });
 
+  it('records the order answers were given in', () => {
+    const one = sessionReducer(answering, { type: 'answered', factId: 'vacateDate', value: 'x' });
+    const two = sessionReducer(one, { type: 'answered', factId: 'writtenAgreement', value: true });
+    expect(two.answerOrder).toEqual(['vacateDate', 'writtenAgreement']);
+  });
+
+  it('does not record a fact twice when it is answered again', () => {
+    const one = sessionReducer(answering, { type: 'answered', factId: 'vacateDate', value: 'x' });
+    const again = sessionReducer(one, { type: 'answered', factId: 'vacateDate', value: 'y' });
+    expect(again.answerOrder).toEqual(['vacateDate']);
+    expect(again.facts.vacateDate).toBe('y');
+  });
+
+  it('does not treat extracted facts as answers the user can undo', () => {
+    // `answering` came from a classification that supplied `state`.
+    expect(answering.facts.state).toBe('Karnataka');
+    expect(answering.answerOrder).toEqual([]);
+  });
+
+  it('clearing an answer removes the fact so it is asked again', () => {
+    const answered = sessionReducer(answering, {
+      type: 'answered',
+      factId: 'vacateDate',
+      value: '2026-07-01',
+    });
+    const cleared = sessionReducer(answered, { type: 'answer-cleared', factId: 'vacateDate' });
+
+    expect(cleared.facts).not.toHaveProperty('vacateDate');
+    expect(cleared.answerOrder).toEqual([]);
+    expect(currentQuestion(cleared)?.id).toBe('vacateDate');
+  });
+
+  it('clearing an answer from the result returns to the questions', () => {
+    const assessment = { ready: true } as unknown as CaseAssessment;
+    const done = sessionReducer(answering, { type: 'assessed', assessment });
+    const cleared = sessionReducer(done, { type: 'answer-cleared', factId: 'state' });
+
+    expect(cleared.stage).toBe('answering');
+    expect(cleared.assessment).toBeNull();
+    expect(cleared.facts).not.toHaveProperty('state');
+  });
+
+  it('can clear a fact that was extracted rather than answered here', () => {
+    const cleared = sessionReducer(answering, { type: 'answer-cleared', factId: 'state' });
+    expect(cleared.facts).not.toHaveProperty('state');
+    expect(cleared.answerOrder).toEqual([]);
+  });
+
+  it('goes back to the description when the match is rejected, keeping the text', () => {
+    const typed = sessionReducer(
+      { ...answering, scenario: 'what I actually asked about' },
+      { type: 'answered', factId: 'state', value: 'Goa' },
+    );
+    const next = sessionReducer(typed, { type: 'match-rejected' });
+
+    expect(next.stage).toBe('describe');
+    expect(next.scenario).toBe('what I actually asked about');
+    // Facts and the playbook belonged to a situation the user says is not theirs.
+    expect(next.playbook).toBeNull();
+    expect(next.facts).toEqual({});
+    expect(next.injectionFindings).toEqual([]);
+    expect(next.answerOrder).toEqual([]);
+  });
+
+  it('keeps the catalogue when a match is rejected, so examples still render', () => {
+    const withCatalogue = {
+      ...answering,
+      catalogue: [{ id: 'a', domain: 'rental', title: 'T', summary: 'S', examplePrompt: 'E' }],
+    };
+    expect(sessionReducer(withCatalogue, { type: 'match-rejected' }).catalogue).toHaveLength(1);
+  });
+
   it('returns to a clean slate on restart', () => {
     expect(sessionReducer(answering, { type: 'restarted' })).toEqual(initialState);
   });

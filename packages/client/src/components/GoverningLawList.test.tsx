@@ -23,13 +23,16 @@ const references: readonly LegalReference[] = [
 describe('GoverningLawList', () => {
   it('cites the act, year and provision', () => {
     render(<GoverningLawList references={references} />);
-    expect(screen.getByText(/Limitation Act 1963, Art.55/)).toBeInTheDocument();
+    // The provision is visually separated, so assert on the parts rather than
+    // one punctuated string.
+    expect(screen.getByText(/Limitation Act 1963/)).toBeInTheDocument();
+    expect(screen.getByText('Art.55')).toBeInTheDocument();
     expect(screen.getByText('Three years to sue for breach of contract.')).toBeInTheDocument();
   });
 
   it('warns where the law differs by state', () => {
     render(<GoverningLawList references={references} />);
-    expect(screen.getByText('(varies by state)')).toBeInTheDocument();
+    expect(screen.getByText('varies by state')).toBeInTheDocument();
   });
 
   it('does not warn where it does not', () => {
@@ -38,7 +41,7 @@ describe('GoverningLawList', () => {
       throw new Error('expected a reference fixture');
     }
     render(<GoverningLawList references={[nationwide]} />);
-    expect(screen.queryByText('(varies by state)')).not.toBeInTheDocument();
+    expect(screen.queryByText('varies by state')).not.toBeInTheDocument();
   });
 
   it('has no accessibility violations', async () => {

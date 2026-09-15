@@ -3,6 +3,8 @@ interface ScenarioFormProps {
   readonly busy: boolean;
   readonly onScenarioChange: (scenario: string) => void;
   readonly onSubmit: () => void;
+  /** Lets the page move focus here after an example is picked. */
+  readonly textareaRef?: React.Ref<HTMLTextAreaElement>;
 }
 
 const MIN_LENGTH = 10;
@@ -12,11 +14,13 @@ export function ScenarioForm({
   busy,
   onScenarioChange,
   onSubmit,
+  textareaRef,
 }: ScenarioFormProps): React.JSX.Element {
   const tooShort = scenario.trim().length < MIN_LENGTH;
 
   return (
     <form
+      className="card p-6"
       onSubmit={(event) => {
         event.preventDefault();
         if (!tooShort && !busy) {
@@ -24,7 +28,7 @@ export function ScenarioForm({
         }
       }}
     >
-      <label htmlFor="scenario" className="block text-lg font-medium text-ink">
+      <label htmlFor="scenario" className="block text-lg font-semibold text-ink">
         What happened?
       </label>
       <p id="scenario-help" className="mt-1 text-sm text-muted">
@@ -32,24 +36,28 @@ export function ScenarioForm({
       </p>
       <textarea
         id="scenario"
+        ref={textareaRef}
         name="scenario"
         aria-describedby="scenario-help"
         required
-        rows={6}
+        rows={5}
         value={scenario}
         onChange={(event) => {
           onScenarioChange(event.target.value);
         }}
-        className="mt-3 w-full rounded-md border border-line bg-white p-3 text-ink focus:border-brand focus:outline-2 focus:outline-brand"
+        className="mt-4 w-full resize-y rounded-xl border border-line bg-surface/60 p-4 leading-relaxed text-ink placeholder:text-muted/70 focus:border-brand focus:bg-card focus:outline-2 focus:outline-offset-1 focus:outline-brand"
         placeholder="My landlord has not returned my deposit since I moved out in July…"
       />
-      <button
-        type="submit"
-        disabled={tooShort || busy}
-        className="mt-3 rounded-md bg-brand px-5 py-2.5 font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        {busy ? 'Working…' : 'Find out where I stand'}
-      </button>
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <button
+          type="submit"
+          disabled={tooShort || busy}
+          className="rounded-xl bg-brand px-6 py-3 font-semibold text-card transition-colors hover:bg-brand-deep disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          {busy ? 'Working…' : 'Find out where I stand'}
+        </button>
+        <p className="text-sm text-muted">Free. Nothing is saved.</p>
+      </div>
     </form>
   );
 }

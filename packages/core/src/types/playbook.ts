@@ -11,7 +11,8 @@ import type { DecisiveFact, FactId } from './facts.js';
 import type { LegalReference, LimitationRule } from './legal.js';
 import type { Route } from './route.js';
 
-export type Domain = 'rental' | 'employment' | 'consumer' | 'cyber-fraud' | 'money-recovery';
+export type Domain =
+  'rental' | 'housing-society' | 'employment' | 'consumer' | 'cyber-fraud' | 'money-recovery';
 
 export type ArtifactKind =
   'demand-notice' | 'evidence-checklist' | 'lawyer-brief' | 'next-steps-timeline';
@@ -31,6 +32,14 @@ export interface Playbook {
   readonly title: string;
   /** One line the user should recognise their own situation in. */
   readonly summary: string;
+  /**
+   * How a real person would describe this, in their own words.
+   *
+   * Shown on the landing page as a one-click example. Keeping it on the playbook
+   * means the examples the UI advertises cannot drift from what the engine
+   * actually handles.
+   */
+  readonly examplePrompt: string;
   readonly decisiveFacts: readonly DecisiveFact[];
   /** Facts the engine computes rather than asks — e.g. whether a state adopted an Act. */
   readonly derivedFacts: readonly FactId[];

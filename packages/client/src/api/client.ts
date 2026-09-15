@@ -1,5 +1,5 @@
 import type { CaseAssessment, CaseFacts } from '@nyaya-mitra/core';
-import { ApiError, type ClassifyResponse } from './types.js';
+import { ApiError, type ClassifyResponse, type PlaybookSummary } from './types.js';
 
 function messageForStatus(status: number): string {
   if (status === 429) {
@@ -40,4 +40,26 @@ export function requestAssessment(
   today: string,
 ): Promise<CaseAssessment> {
   return postJson<CaseAssessment>('/api/assess', { playbookId, facts, today });
+}
+
+/**
+ * The situation catalogue.
+ *
+ * Fetched rather than hard-coded so the examples on screen always match what the
+ * engine can actually handle.
+ */
+export async function fetchPlaybooks(): Promise<readonly PlaybookSummary[]> {
+  // Every failure path returns an empty catalogue rather than throwing: the
+  // examples are an enhancement, and a broken response must not take the page
+  // down or surface an error the user cannot act on.
+  try {
+    const response = await fetch('/api/playbooks');
+    if (!response.ok) {
+      return [];
+    }
+    const body = (await response.json()) as { playbooks?: readonly PlaybookSummary[] };
+    return body.playbooks ?? [];
+  } catch {
+    return [];
+  }
 }

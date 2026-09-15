@@ -1,11 +1,177 @@
 @import 'tailwindcss';
 
+/* Self-hosted so the strict CSP (font-src 'self') holds and no third party sees
+   who is reading a page about their legal problem. */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/inter-latin.woff2') format('woff2');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Light is the base. Every colour is defined here, so no token exists only
+   inside a dark block and goes undefined when the theme flips. */
 @theme {
-  --color-ink: oklch(0.22 0.02 260);
-  --color-muted: oklch(0.48 0.02 260);
-  --color-surface: oklch(0.99 0.004 260);
-  --color-line: oklch(0.9 0.008 260);
-  --color-brand: oklch(0.48 0.13 255);
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --color-ink: oklch(0.24 0.03 268);
+  --color-ink-soft: oklch(0.42 0.025 268);
+  /* Cleared 4.5:1 on white, the page ground and the warm accent tint. A
+     secondary-text token has to pass on every surface it lands on. */
+  --color-muted: oklch(0.51 0.02 268);
+  --color-line: oklch(0.91 0.012 268);
+  --color-surface: oklch(0.975 0.006 268);
+  --color-card: oklch(1 0 0);
+
+  --color-brand: oklch(0.44 0.16 268);
+  --color-brand-deep: oklch(0.32 0.13 268);
+  --color-brand-soft: oklch(0.955 0.025 268);
+  --color-brand-onDeep: oklch(1 0 0);
+  --color-accent: oklch(0.55 0.13 62);
+  --color-accent-soft: oklch(0.965 0.03 70);
+
+  /* Status is semantic, not a raw palette colour, so every surface that shows
+     urgency themes together rather than one component at a time. */
+  --color-ok-bg: oklch(0.96 0.04 155);
+  --color-ok-border: oklch(0.72 0.14 155);
+  --color-ok-fg: oklch(0.34 0.09 155);
+  --color-ok-solid: oklch(0.52 0.13 155);
+
+  --color-warn-bg: oklch(0.96 0.05 85);
+  --color-warn-border: oklch(0.76 0.14 85);
+  --color-warn-fg: oklch(0.38 0.08 60);
+  --color-warn-solid: oklch(0.58 0.13 70);
+
+  --color-alert-bg: oklch(0.96 0.05 55);
+  --color-alert-border: oklch(0.73 0.15 50);
+  --color-alert-fg: oklch(0.38 0.11 45);
+  --color-alert-solid: oklch(0.55 0.16 45);
+
+  --color-danger-bg: oklch(0.955 0.035 25);
+  --color-danger-border: oklch(0.68 0.19 25);
+  --color-danger-fg: oklch(0.38 0.14 25);
+  --color-danger-solid: oklch(0.51 0.19 25);
+
+  --radius-card: 0.875rem;
+}
+
+/* System preference, unless the reader has explicitly chosen light. Handled in
+   CSS rather than JavaScript so the first paint is already correct — the strict
+   CSP forbids the inline script that would otherwise be needed. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+
+    --color-ink: oklch(0.96 0.006 268);
+    --color-ink-soft: oklch(0.87 0.012 268);
+    --color-muted: oklch(0.73 0.018 268);
+    --color-line: oklch(0.33 0.02 268);
+    --color-surface: oklch(0.17 0.016 268);
+    --color-card: oklch(0.22 0.018 268);
+
+    --color-brand: oklch(0.78 0.13 268);
+    --color-brand-deep: oklch(0.27 0.09 268);
+    --color-brand-soft: oklch(0.29 0.055 268);
+    --color-brand-onDeep: oklch(0.97 0.01 268);
+    --color-accent: oklch(0.82 0.12 62);
+    --color-accent-soft: oklch(0.25 0.04 62);
+
+    --color-ok-bg: oklch(0.26 0.05 155);
+    --color-ok-border: oklch(0.52 0.11 155);
+    --color-ok-fg: oklch(0.9 0.08 155);
+    --color-ok-solid: oklch(0.62 0.14 155);
+
+    --color-warn-bg: oklch(0.27 0.05 80);
+    --color-warn-border: oklch(0.55 0.11 80);
+    --color-warn-fg: oklch(0.92 0.08 85);
+    --color-warn-solid: oklch(0.68 0.13 80);
+
+    --color-alert-bg: oklch(0.27 0.06 50);
+    --color-alert-border: oklch(0.55 0.13 50);
+    --color-alert-fg: oklch(0.91 0.07 60);
+    --color-alert-solid: oklch(0.66 0.16 48);
+
+    --color-danger-bg: oklch(0.26 0.07 25);
+    --color-danger-border: oklch(0.55 0.16 25);
+    --color-danger-fg: oklch(0.92 0.06 25);
+    --color-danger-solid: oklch(0.62 0.2 25);
+  }
+}
+
+/* An explicit choice wins over the system in both directions. */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-ink: oklch(0.96 0.006 268);
+  --color-ink-soft: oklch(0.87 0.012 268);
+  --color-muted: oklch(0.73 0.018 268);
+  --color-line: oklch(0.33 0.02 268);
+  --color-surface: oklch(0.17 0.016 268);
+  --color-card: oklch(0.22 0.018 268);
+
+  --color-brand: oklch(0.78 0.13 268);
+  --color-brand-deep: oklch(0.27 0.09 268);
+  --color-brand-soft: oklch(0.29 0.055 268);
+  --color-brand-onDeep: oklch(0.97 0.01 268);
+  --color-accent: oklch(0.82 0.12 62);
+  --color-accent-soft: oklch(0.25 0.04 62);
+
+  --color-ok-bg: oklch(0.26 0.05 155);
+  --color-ok-border: oklch(0.52 0.11 155);
+  --color-ok-fg: oklch(0.9 0.08 155);
+  --color-ok-solid: oklch(0.62 0.14 155);
+
+  --color-warn-bg: oklch(0.27 0.05 80);
+  --color-warn-border: oklch(0.55 0.11 80);
+  --color-warn-fg: oklch(0.92 0.08 85);
+  --color-warn-solid: oklch(0.68 0.13 80);
+
+  --color-alert-bg: oklch(0.27 0.06 50);
+  --color-alert-border: oklch(0.55 0.13 50);
+  --color-alert-fg: oklch(0.91 0.07 60);
+  --color-alert-solid: oklch(0.66 0.16 48);
+
+  --color-danger-bg: oklch(0.26 0.07 25);
+  --color-danger-border: oklch(0.55 0.16 25);
+  --color-danger-fg: oklch(0.92 0.06 25);
+  --color-danger-solid: oklch(0.62 0.2 25);
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+body {
+  background-color: var(--color-surface);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+@utility card {
+  border-radius: var(--radius-card);
+  border: 1px solid var(--color-line);
+  background-color: var(--color-card);
+  box-shadow:
+    0 1px 2px oklch(0 0 0 / 0.05),
+    0 1px 1px oklch(0 0 0 / 0.04);
+}
+
+@utility card-interactive {
+  transition:
+    box-shadow 150ms ease,
+    border-color 150ms ease,
+    transform 150ms ease;
+}
+
+@utility card-interactive-hover {
+  box-shadow:
+    0 6px 16px oklch(0 0 0 / 0.1),
+    0 2px 4px oklch(0 0 0 / 0.06);
+  transform: translateY(-2px);
 }
 
 /* Respect the reader's motion preference rather than assuming animation is welcome. */
@@ -17,5 +183,9 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  .card-interactive:hover {
+    transform: none !important;
   }
 }

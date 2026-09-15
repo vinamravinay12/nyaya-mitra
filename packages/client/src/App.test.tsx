@@ -69,6 +69,75 @@ describe('App', () => {
     });
   });
 
+  it('lets the user back out of a wrong match with their text intact', async () => {
+    // Only some facts extracted, so the app lands on the questionnaire.
+    const { state: _state, ...rest } = completeFacts;
+    mockApi(matched(rest));
+    render(<App />);
+    await describeScenario();
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Not your situation?' })).toBeInTheDocument();
+    });
+    await userEvent.click(screen.getByRole('button', { name: 'Not your situation?' }));
+
+    // Back on the description, with what they wrote still there to reword.
+    const box = screen.getByLabelText('What happened?');
+    expect(box).toHaveValue(SCENARIO);
+    expect(screen.queryByRole('button', { name: 'Not your situation?' })).not.toBeInTheDocument();
+  });
+
+  it('clears the box between questions instead of keeping the last answer', async () => {
+    const { state: _state, vacateDate: _date, ...rest } = completeFacts;
+    mockApi(matched(rest));
+    render(<App />);
+    await describeScenario();
+
+    const first = await screen.findByLabelText('Which state was the property in?');
+    await userEvent.type(first, 'Karnataka');
+    await userEvent.click(screen.getByRole('button', { name: 'Next' }));
+
+    // A reused component instance would still be holding "Karnataka" here.
+    const second = await screen.findByLabelText('When did you hand over possession?');
+    expect(second).toHaveValue('');
+  });
+
+  it('lets the user go back to the previous question', async () => {
+    const { state: _state, vacateDate: _date, ...rest } = completeFacts;
+    mockApi(matched(rest));
+    render(<App />);
+    await describeScenario();
+
+    // Nothing to go back to before the first answer is given.
+    await screen.findByLabelText('Which state was the property in?');
+    expect(screen.queryByRole('button', { name: /Back to the previous question/ })).toBeNull();
+
+    await userEvent.type(screen.getByLabelText('Which state was the property in?'), 'Karnataka');
+    await userEvent.click(screen.getByRole('button', { name: 'Next' }));
+    await screen.findByLabelText('When did you hand over possession?');
+
+    await userEvent.click(screen.getByRole('button', { name: /Back to the previous question/ }));
+    expect(await screen.findByLabelText('Which state was the property in?')).toHaveValue('');
+  });
+
+  it('lets the user change an earlier answer from the summary', async () => {
+    const { state: _state, vacateDate: _date, ...rest } = completeFacts;
+    mockApi(matched(rest));
+    render(<App />);
+    await describeScenario();
+
+    await userEvent.type(
+      await screen.findByLabelText('Which state was the property in?'),
+      'Karnataka',
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Next' }));
+    await screen.findByLabelText('When did you hand over possession?');
+
+    expect(screen.getByText('Karnataka')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /Which state was the property in/ }));
+    expect(await screen.findByLabelText('Which state was the property in?')).toBeInTheDocument();
+  });
+
   it('stops and routes an out-of-scope situation to a professional', async () => {
     mockApi({ kind: 'out-of-scope', reason: 'This is a criminal matter.' });
     render(<App />);

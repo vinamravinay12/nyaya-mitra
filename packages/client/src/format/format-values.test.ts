@@ -3,6 +3,7 @@ import {
   describeBand,
   formatDayRange,
   formatDaysRemaining,
+  formatFactValue,
   formatRupees,
 } from './format-values.js';
 
@@ -43,5 +44,26 @@ describe('describeBand', () => {
     expect(describeBand('guided')).toContain('with care');
     expect(describeBand('lawyer-recommended')).toContain('lawyer');
     expect(describeBand('urgent')).toBe('Act now');
+  });
+});
+
+describe('formatFactValue', () => {
+  it('renders a boolean as the word the user chose', () => {
+    expect(formatFactValue('boolean', true)).toBe('Yes');
+    expect(formatFactValue('boolean', false)).toBe('No');
+  });
+
+  it('renders money in rupees but plain numbers as themselves', () => {
+    expect(formatFactValue('money', 80_000)).toBe('₹80,000');
+    expect(formatFactValue('text', 12)).toBe('12');
+  });
+
+  it('passes text and dates through unchanged', () => {
+    expect(formatFactValue('text', 'Karnataka')).toBe('Karnataka');
+    expect(formatFactValue('date', '2026-07-01')).toBe('2026-07-01');
+  });
+
+  it('renders a cleared answer as nothing rather than "null"', () => {
+    expect(formatFactValue('text', null)).toBe('');
   });
 });

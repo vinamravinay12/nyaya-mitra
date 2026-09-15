@@ -29,13 +29,16 @@ export function ProblemNotice({
   const hasCatalogue = covered.length > 0;
 
   return (
-    <div role="alert" className="rounded-lg border-2 border-amber-700 bg-amber-50 p-5">
-      <h1 className="text-xl font-semibold text-amber-900">{headingFor(refused, hasCatalogue)}</h1>
-      <p className="mt-2 text-amber-900">{message}</p>
+    <div
+      role="alert"
+      className="rounded-2xl border-2 border-warn-border bg-warn-bg p-6 text-warn-fg"
+    >
+      <h1 className="text-xl font-semibold">{headingFor(refused, hasCatalogue)}</h1>
+      <p className="mt-2">{message}</p>
       {hasCatalogue && (
         <>
-          <h2 className="mt-4 font-medium text-amber-900">What we can help with today</h2>
-          <ul className="mt-2 list-disc pl-5 text-amber-900">
+          <h2 className="mt-4 font-medium">What we can help with today</h2>
+          <ul className="mt-2 list-disc pl-5">
             {covered.map((situation) => (
               <li key={situation.id}>{situation.title}</li>
             ))}

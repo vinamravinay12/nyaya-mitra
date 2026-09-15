@@ -15,6 +15,8 @@ export const rentalDepositWithheld: Playbook = {
   title: 'Landlord is withholding my security deposit',
   summary:
     'You have moved out and the landlord has not returned the deposit, or has deducted from it.',
+  examplePrompt:
+    'My landlord has not returned my ₹80,000 deposit since I moved out in July. He says I damaged the walls but has not given me any bills.',
 
   decisiveFacts: [
     {

@@ -13,6 +13,8 @@ export const moneyChequeBounced: Playbook = {
   domain: 'money-recovery',
   title: 'A cheque given to me has bounced',
   summary: 'A cheque was returned unpaid and the person who gave it is not making good on it.',
+  examplePrompt:
+    'A friend gave me a cheque for ₹2 lakh to repay a loan and it bounced last month. He is not responding to my messages.',
 
   decisiveFacts: [
     {

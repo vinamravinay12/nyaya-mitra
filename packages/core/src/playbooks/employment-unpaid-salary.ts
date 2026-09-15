@@ -12,6 +12,8 @@ export const employmentUnpaidSalary: Playbook = {
   domain: 'employment',
   title: 'My employer has not paid me',
   summary: 'Salary, dues or your full-and-final settlement have not been paid.',
+  examplePrompt:
+    'My employer has not paid my salary for three months. They also say I cannot join a competitor for a year after I leave.',
 
   decisiveFacts: [
     {

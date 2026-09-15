@@ -11,6 +11,7 @@ export function playbooksRouter(): Router {
         domain: playbook.domain,
         title: playbook.title,
         summary: playbook.summary,
+        examplePrompt: playbook.examplePrompt,
       })),
     });
   });

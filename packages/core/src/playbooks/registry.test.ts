@@ -101,6 +101,12 @@ describe.each(playbooks.map((playbook) => [playbook.id, playbook] as const))(
       expect(moneyFacts).toContain(playbook.amountAtStakeFact);
     });
 
+    it('offers an example a real person might actually type', () => {
+      expect(playbook.examplePrompt.length).toBeGreaterThan(30);
+      // First person, not a category label — it goes straight into the textarea.
+      expect(playbook.examplePrompt).toMatch(/\b(I|my|me)\b/i);
+    });
+
     it('names the kind of lawyer it would escalate to', () => {
       expect(playbook.lawyerSpecialisation.length).toBeGreaterThan(0);
     });

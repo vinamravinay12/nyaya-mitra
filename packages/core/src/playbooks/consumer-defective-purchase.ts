@@ -12,6 +12,8 @@ export const consumerDefectivePurchase: Playbook = {
   title: 'What I bought is faulty and they will not refund it',
   summary:
     'A product or service was defective and the seller is refusing a refund, repair or replacement.',
+  examplePrompt:
+    'I bought a washing machine online two months ago for ₹32,000 and it has never worked. The seller keeps refusing a refund.',
 
   decisiveFacts: [
     {

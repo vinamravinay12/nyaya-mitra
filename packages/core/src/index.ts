@@ -7,8 +7,10 @@ export { evaluateCondition } from './conditions/evaluate-condition.js';
 export {
   findMissingFacts,
   findOptionalGaps,
+  intakeProgress,
   isReadyToAssess,
   nextQuestion,
+  type IntakeProgress,
 } from './facts/find-missing-facts.js';
 export {
   APPROACHING_DAYS,

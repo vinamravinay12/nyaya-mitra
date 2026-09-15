@@ -27,7 +27,10 @@ export function createStubClient(): LlmClient {
       return Promise.resolve(
         JSON.stringify({
           playbookId: 'rental.deposit_withheld',
-          confidence: 0.55,
+          // Must sit above MIN_CONFIDENCE: the stub stands in for a confident
+          // match, and a value below the floor would make the app unusable
+          // without a key.
+          confidence: 0.9,
           outOfScope: false,
           outOfScopeReason: null,
           extractedFacts: {},
