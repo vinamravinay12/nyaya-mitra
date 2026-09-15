@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+
+Sitemap: https://nyaya-mitra-eb9a3.web.app/sitemap.xml

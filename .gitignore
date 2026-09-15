@@ -232,3 +232,6 @@ __marimo__/
 .streamlit/secrets.toml
 >>>>>>> caaa6e6696b0930aff2fe9bd607ef300e08c9a6a
 dist-tsc/
+
+# Local editor/tool config
+.claude/

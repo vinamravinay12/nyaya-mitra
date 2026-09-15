@@ -1,0 +1,29 @@
+# Nyaya Mitra
+
+> Scenario-first legal triage for everyday legal problems in India. Describe what
+> happened in plain language and get your options, your deadlines, and a clear
+> answer on whether you need a lawyer.
+
+Nyaya Mitra provides general legal information about Indian law. It is not a
+lawyer and does not give legal advice. Criminal defence, family and custody
+matters, immigration, and anything already before a court are out of scope and
+are routed to a qualified professional.
+
+Legal content comes from hand-written Situation Playbooks, not from a language
+model. The model only classifies a described situation and extracts facts the
+user stated; it never supplies statutes, deadlines or recommendations.
+
+## Situations covered
+
+- Landlord is withholding a security deposit
+- Employer has not paid salary or dues
+- A purchase is faulty and a refund is refused
+- Money taken from an account without authorisation
+- A cheque has bounced
+
+## Documentation
+
+- [Source and README](https://github.com/vinamravinay12/nyaya-mitra): overview, approach, assumptions and known gaps
+- [Architecture](https://github.com/vinamravinay12/nyaya-mitra/blob/main/docs/ARCHITECTURE.md): how the engine and its trust boundaries work
+- [Decision records](https://github.com/vinamravinay12/nyaya-mitra/blob/main/docs/decisions.md): what was decided, and what each decision cost
+- [Security](https://github.com/vinamravinay12/nyaya-mitra/blob/main/docs/SECURITY.md): credential handling, untrusted input, supply chain
