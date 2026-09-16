@@ -4,7 +4,7 @@ import { ApiError, type ClassifyResponse, type PlaybookSummary } from './types.j
 
 function messageForStatus(status: number): string {
   if (status === 413) {
-    return 'That file is too large. The limit is 4 MB.';
+    return 'That file is too large. The limit is 2 MB.';
   }
   if (status === 429) {
     return 'The assistant has reached its usage limit for today. Please try again tomorrow.';

@@ -177,7 +177,9 @@ describe('POST /api/assess', () => {
 });
 
 describe('POST /api/classify with a document', () => {
-  const pdf = { name: 'agreement.pdf', mimeType: 'application/pdf', data: 'QUJD' };
+  // A real %PDF header: the server verifies bytes against the declared type.
+  const PDF_BYTES = 'JVBERi0xLjcKMSAwIG9iago8PD4+CmVuZG9iago=';
+  const pdf = { name: 'agreement.pdf', mimeType: 'application/pdf', data: PDF_BYTES };
   const scenario = 'My landlord is keeping my deposit after I moved out.';
 
   it('accepts a supported document alongside the scenario', async () => {
@@ -194,17 +196,29 @@ describe('POST /api/classify with a document', () => {
     expect(response.status).toBe(400);
   });
 
+  it('rejects a file whose bytes contradict its declared type', async () => {
+    // Renaming a text file to .pdf must not get it through.
+    const text = Buffer.from('this is not a pdf').toString('base64');
+    const response = await request(appWith())
+      .post('/api/classify')
+      .send({ scenario, document: { ...pdf, data: text } });
+    expect(response.status).toBe(400);
+  });
+
   it('rejects a file just over the document limit with a clear message', async () => {
-    const overLimit = Buffer.alloc(4 * 1024 * 1024 + 1024).toString('base64');
+    const overLimit = Buffer.concat([
+      Buffer.from('%PDF-1.7'),
+      Buffer.alloc(2 * 1024 * 1024 + 1024),
+    ]).toString('base64');
     const response = await request(appWith())
       .post('/api/classify')
       .send({ scenario, document: { ...pdf, data: overLimit } });
     expect(response.status).toBe(400);
-    expect(response.body.error).toContain('4 MB');
+    expect(response.body.error).toContain('2 MB');
   });
 
   it('explains an upload too large to even parse, rather than failing opaquely', async () => {
-    const huge = Buffer.alloc(7 * 1024 * 1024).toString('base64');
+    const huge = Buffer.alloc(4 * 1024 * 1024).toString('base64');
     const response = await request(appWith())
       .post('/api/classify')
       .send({ scenario, document: { ...pdf, data: huge } });

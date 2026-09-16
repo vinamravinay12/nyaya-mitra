@@ -12,7 +12,7 @@ export function classifyRouter(llm: LlmClient): Router {
     if (!parsed.success) {
       response.status(400).json({
         error:
-          'Describe your situation in 10 to 5000 characters. Any attached file must be a PDF, image or text file under 4 MB.',
+          'Describe your situation in 10 to 5000 characters. Any attached file must be a PDF, image or text file under 2 MB.',
       });
       return;
     }

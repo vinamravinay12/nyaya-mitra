@@ -178,10 +178,10 @@ describe('App', () => {
     render(<App />);
 
     const huge = new File(['x'], 'huge.pdf', { type: 'application/pdf' });
-    Object.defineProperty(huge, 'size', { value: 5 * 1024 * 1024 });
+    Object.defineProperty(huge, 'size', { value: 3 * 1024 * 1024 });
     await userEvent.upload(screen.getByLabelText(/Have the document/), huge);
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('4 MB');
+    expect(await screen.findByRole('alert')).toHaveTextContent('2 MB');
     expect(screen.queryByText('huge.pdf')).not.toBeInTheDocument();
   });
 

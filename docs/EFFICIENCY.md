@@ -29,6 +29,20 @@ preconditions and limitation internals that the UI never renders. A view layer
 now sends only what is read, which cuts the payload and stops the engine's
 reasoning being handed out. See [SECURITY.md](SECURITY.md#response-shaping).
 
+## Uploads
+
+A phone photograph of an agreement is several megabytes of pixels carrying a
+single page of text. Images are downscaled in the browser before encoding — the
+longest edge capped at 2000px, re-encoded as JPEG — which typically takes a 4 MB
+photo under 500 KB while leaving the text legible.
+
+That in turn let the accepted document size drop from 4 MB to 2 MB, and the
+request body limit from 6 MB to 3 MB: a smaller accepted body is both cheaper and
+a smaller thing to abuse.
+
+Every failure path returns the original file. A document that uploads slightly
+larger is far better than one that will not upload at all.
+
 ## Rendering
 
 The results view is code-split and loaded on demand: it is needed several

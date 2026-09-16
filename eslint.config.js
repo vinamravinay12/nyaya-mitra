@@ -58,13 +58,6 @@ export default defineConfig([
     rules: { 'max-lines': 'off' },
   },
   {
-    // A reducer's cyclomatic complexity is simply how many actions the app has.
-    // A flat switch of one-line cases is not the tangled logic this rule exists
-    // to catch, and splitting it further would hurt readability, not help it.
-    files: ['**/*-reducer.ts'],
-    rules: { complexity: ['error', 20] },
-  },
-  {
     files: ['**/*.test.ts', '**/*.test.tsx'],
     rules: {
       'max-lines': 'off',

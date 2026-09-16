@@ -20,8 +20,12 @@ export const ALLOWED_MIME_TYPES: readonly string[] = [
   'text/plain',
 ];
 
-/** Comfortably covers a photographed agreement; well under Cloud Run's limit. */
-export const MAX_DOCUMENT_BYTES = 4 * 1024 * 1024;
+/**
+ * Large photographs are downscaled in the browser before they are sent, so a
+ * real document comfortably fits well under this. Lowered from 4 MB once that
+ * landed: a smaller accepted body is a smaller thing to abuse.
+ */
+export const MAX_DOCUMENT_BYTES = 2 * 1024 * 1024;
 
 export const isAllowedMimeType = (mimeType: string): boolean =>
   ALLOWED_MIME_TYPES.includes(mimeType);

@@ -6,7 +6,7 @@ export interface UploadedDocument {
 }
 
 export const ACCEPTED_TYPES = 'application/pdf,image/jpeg,image/png,image/webp,text/plain';
-export const MAX_DOCUMENT_BYTES = 4 * 1024 * 1024;
+export const MAX_DOCUMENT_BYTES = 2 * 1024 * 1024;
 
 export const isTooLarge = (file: File): boolean => file.size > MAX_DOCUMENT_BYTES;
 

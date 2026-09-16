@@ -1,4 +1,5 @@
 import { useCallback, type Dispatch } from 'react';
+import { downscaleImage } from '../documents/downscale-image.js';
 import { isTooLarge, readDocument } from '../documents/read-file.js';
 import type { SessionAction } from './session-state.js';
 
@@ -16,19 +17,23 @@ export interface DocumentActions {
 export function useDocument(dispatch: Dispatch<SessionAction>): DocumentActions {
   const attachDocument = useCallback(
     (file: File): void => {
-      if (isTooLarge(file)) {
-        dispatch({
-          type: 'document-rejected',
-          message: 'That file is too large. The limit is 4 MB.',
+      // Shrink an oversized photo first, then judge the size. A 4 MB phone photo
+      // usually lands well under the limit once scaled.
+      void downscaleImage(file).then((prepared) => {
+        if (isTooLarge(prepared)) {
+          dispatch({
+            type: 'document-rejected',
+            message: 'That file is too large. The limit is 2 MB.',
+          });
+          return;
+        }
+        return readDocument(prepared).then((result) => {
+          dispatch(
+            result.ok
+              ? { type: 'document-attached', document: result.document, size: prepared.size }
+              : { type: 'document-rejected', message: result.message },
+          );
         });
-        return;
-      }
-      void readDocument(file).then((result) => {
-        dispatch(
-          result.ok
-            ? { type: 'document-attached', document: result.document, size: file.size }
-            : { type: 'document-rejected', message: result.message },
-        );
       });
     },
     [dispatch],

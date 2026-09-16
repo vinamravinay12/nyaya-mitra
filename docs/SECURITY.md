@@ -102,6 +102,21 @@ exhausting the shared upstream model quota, not to withstand a deliberate
 attack; a shared store keyed on something stronger is the next step if that
 changes.
 
+## Uploaded documents
+
+| Control             | Detail                                                                                                            |
+| :------------------ | :---------------------------------------------------------------------------------------------------------------- |
+| Type allowlist      | PDF, JPEG, PNG, WebP, plain text                                                                                  |
+| **Signature check** | The declared `mimeType` is verified against the file's own bytes                                                  |
+| Size                | 2 MB, enforced in the schema; the body limit is 3 MB so an oversized upload gets a message rather than a bare 413 |
+| Retention           | None. Held in memory for one request, never written anywhere                                                      |
+| Injection           | Fenced and labelled as evidence; instruction-like text is ignored **and reported to the user**                    |
+
+`File.type` is derived from the extension by the browser and is trivially
+forged, so trusting it means the declared type and the actual bytes can
+disagree. `sniff-type.ts` reads the real type from the file's signature and
+rejects an upload whose bytes contradict its claim.
+
 ## Response shaping
 
 The engine's structures carry the conditions that drive routes, red flags and

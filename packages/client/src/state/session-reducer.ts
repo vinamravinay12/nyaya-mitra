@@ -35,7 +35,6 @@ type DocumentAction = Extract<
   { type: 'document-attached' | 'document-cleared' | 'document-rejected' }
 >;
 
-/** Split out to keep the main reducer within its complexity budget. */
 function applyDocumentAction(state: SessionState, action: DocumentAction): SessionState {
   switch (action.type) {
     case 'document-attached':
@@ -52,7 +51,9 @@ function applyDocumentAction(state: SessionState, action: DocumentAction): Sessi
   }
 }
 
-export function sessionReducer(state: SessionState, action: SessionAction): SessionState {
+type FlowAction = Exclude<SessionAction, DocumentAction>;
+
+function applyFlowAction(state: SessionState, action: FlowAction): SessionState {
   switch (action.type) {
     case 'scenario-changed':
       return { ...state, scenario: action.scenario };
@@ -84,10 +85,6 @@ export function sessionReducer(state: SessionState, action: SessionAction): Sess
       return { ...state, busy: false, stage: 'result', assessment: action.assessment };
     case 'failed':
       return { ...state, busy: false, stage: 'error', message: action.message };
-    case 'document-attached':
-    case 'document-cleared':
-    case 'document-rejected':
-      return applyDocumentAction(state, action);
     case 'catalogue-loaded':
       return { ...state, catalogue: action.catalogue };
     case 'match-rejected':
@@ -118,4 +115,23 @@ export function currentQuestion(state: SessionState): DecisiveFact | undefined {
 
 export function isIntakeComplete(state: SessionState): boolean {
   return state.playbook !== null && currentQuestion(state) === undefined;
+}
+
+/**
+ * Dispatches to one of two handlers.
+ *
+ * A reducer's cyclomatic complexity is simply how many actions the app has, and
+ * a single flat switch over all of them exceeded the project's ceiling. Splitting
+ * by concern keeps both halves comfortably inside it, rather than raising the
+ * limit for reducers and quietly losing the check everywhere else.
+ */
+export function sessionReducer(state: SessionState, action: SessionAction): SessionState {
+  switch (action.type) {
+    case 'document-attached':
+    case 'document-cleared':
+    case 'document-rejected':
+      return applyDocumentAction(state, action);
+    default:
+      return applyFlowAction(state, action);
+  }
 }
