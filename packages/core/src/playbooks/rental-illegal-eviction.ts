@@ -48,7 +48,8 @@ export const rentalIllegalEviction: Playbook = {
     },
     {
       id: 'noticeDaysGiven',
-      kind: 'money',
+      kind: 'number',
+      unit: 'days',
       question: 'How many days were you given?',
       why: 'Month-to-month tenancies usually attract at least fifteen days, and agreements often more.',
       required: true,

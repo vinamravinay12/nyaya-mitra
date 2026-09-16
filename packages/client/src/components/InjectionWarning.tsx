@@ -20,15 +20,15 @@ export function InjectionWarning({
       className="rounded-xl border border-warn-border bg-warn-bg p-4 text-sm text-warn-fg"
     >
       <h2 id="injection-heading" className="font-medium">
-        Something in that text looked like an instruction
+        Something here looked like an instruction
       </h2>
       <p className="mt-1">
-        We read your description as an account of events, not as instructions. You may want to check
-        where this wording came from:
+        We treated this as a description of events, not as instructions, and did not act on it. You
+        may want to check where this wording came from:
       </p>
       <ul className="mt-2 list-disc pl-5">
         {findings.map((finding) => (
-          <li key={finding.rule}>
+          <li key={`${finding.rule}-${finding.excerpt}`}>
             <q>{finding.excerpt}</q>
           </li>
         ))}

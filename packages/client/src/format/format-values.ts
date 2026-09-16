@@ -1,4 +1,4 @@
-import type { FactKind, FactValue, TriageBand } from '@nyaya-mitra/core';
+import type { DecisiveFact, FactValue, TriageBand } from '@nyaya-mitra/core';
 
 /** Indian grouping: ₹5,00,000 rather than ₹500,000. */
 export function formatRupees(amount: number): string {
@@ -29,13 +29,21 @@ export function formatDaysRemaining(daysRemaining: number): string {
   return daysRemaining === 0 ? 'today' : `${String(daysRemaining)} days left`;
 }
 
-/** Renders an answer the way the user gave it, for the review list. */
-export function formatFactValue(kind: FactKind, value: FactValue): string {
+/**
+ * Renders an answer the way the user gave it, for the review list.
+ *
+ * Only a `money` fact gets a rupee sign. A plain quantity gets its unit, so a
+ * twelve-month restriction reads "12 months" rather than "₹12".
+ */
+export function formatFactValue(fact: DecisiveFact, value: FactValue): string {
   if (typeof value === 'boolean') {
     return value ? 'Yes' : 'No';
   }
   if (typeof value === 'number') {
-    return kind === 'money' ? formatRupees(value) : String(value);
+    if (fact.kind === 'money') {
+      return formatRupees(value);
+    }
+    return fact.unit === undefined ? String(value) : `${String(value)} ${fact.unit}`;
   }
   return value ?? '';
 }

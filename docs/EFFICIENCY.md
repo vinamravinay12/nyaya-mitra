@@ -12,6 +12,33 @@ Reproduce with `npm run build -w @nyaya-mitra/client`.
 Most of the JavaScript is React itself. The application code and the five
 playbooks are a small fraction of it.
 
+## Payload
+
+| Endpoint         |   Before |         Now | Change |
+| :--------------- | -------: | ----------: | -----: |
+| `/api/assess`    | 12,022 B | **2,165 B** |   −82% |
+| `/api/playbooks` |  5,105 B | **1,962 B** |   −62% |
+
+Two changes, measured against the deployed service:
+
+**gzip was not enabled at all.** The API was serving several kilobytes of JSON
+uncompressed despite the browser asking for gzip.
+
+**Responses carried the whole playbook**, including red-flag conditions, route
+preconditions and limitation internals that the UI never renders. A view layer
+now sends only what is read, which cuts the payload and stops the engine's
+reasoning being handed out. See [SECURITY.md](SECURITY.md#response-shaping).
+
+## Rendering
+
+The results view is code-split and loaded on demand: it is needed several
+seconds and one round trip after first paint, so it is not in the initial
+download.
+
+The landing page sections are memoised. The scenario text lives in session
+state, so without that every keystroke in the textarea re-rendered all fourteen
+example cards.
+
 ## Where the work happens
 
 The expensive operation is the Gemini call. Everything else is cheap, and the
@@ -46,10 +73,12 @@ project so the pure domain tests are not paying for a DOM they do not use.
 
 ## Known gaps
 
-- **No route-level code splitting.** The app is a single flow, so there is nothing
-  meaningful to split yet. This would matter as soon as a second route exists.
 - **No caching of classifications.** An identical scenario submitted twice costs
-  two model calls.
+  two model calls. Caching was considered and rejected: it would mean holding
+  users' descriptions of their legal problems server-side, which is not a trade
+  worth making to save one request.
+- **React is most of the bundle.** Application code and all fourteen playbooks
+  are a small fraction of the 76 KB gzipped total.
 - **jsdom is created per test file** (17 times). Vitest suggests `isolate: false`
   to share it; kept isolated for now because per-file isolation is worth more than
   the seconds saved.

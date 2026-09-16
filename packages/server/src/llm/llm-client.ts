@@ -1,3 +1,5 @@
+import type { UploadedDocument } from '../documents/document.js';
+
 /**
  * The entire surface the app needs from a language model.
  *
@@ -5,7 +7,7 @@
  * fully tested modules, and the only untested part is the network call itself.
  */
 export interface LlmClient {
-  complete(prompt: string): Promise<string>;
+  complete(prompt: string, document?: UploadedDocument): Promise<string>;
 }
 
 export class LlmUnavailableError extends Error {

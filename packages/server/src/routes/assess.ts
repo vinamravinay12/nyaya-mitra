@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { assessCase, findPlaybook } from '@nyaya-mitra/core';
 import { assessRequestSchema } from '../validation/schemas.js';
+import { toPublicAssessment } from '../views/public-assessment.js';
 
 /**
  * Runs the engine. No model is involved: given the same facts and date this
@@ -24,7 +25,7 @@ export function assessRouter(): Router {
       return;
     }
 
-    response.json(assessCase(playbook, parsed.data.facts, parsed.data.today));
+    response.json(toPublicAssessment(assessCase(playbook, parsed.data.facts, parsed.data.today)));
   });
 
   return router;

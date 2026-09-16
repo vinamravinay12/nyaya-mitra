@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { ScaleIcon } from '../icons/index.js';
 
 interface HeroProps {
@@ -6,7 +7,7 @@ interface HeroProps {
   readonly situationCount: number | null;
 }
 
-export function Hero({ situationCount }: HeroProps): React.JSX.Element {
+function HeroComponent({ situationCount }: HeroProps): React.JSX.Element {
   return (
     <div className="relative overflow-hidden rounded-2xl bg-brand-deep px-6 py-10 text-brand-onDeep sm:px-10 sm:py-14">
       {/* Decorative wash; kept behind content and hidden from the accessibility tree. */}
@@ -45,3 +46,9 @@ export function Hero({ situationCount }: HeroProps): React.JSX.Element {
     </div>
   );
 }
+
+/**
+ * Memoised: the scenario text lives in session state, so without this every
+ * keystroke in the textarea re-renders this whole section.
+ */
+export const Hero = memo(HeroComponent);

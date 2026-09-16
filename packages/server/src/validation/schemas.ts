@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { isAllowedMimeType, isWithinSizeLimit } from '../documents/document.js';
 
 export const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -15,8 +16,17 @@ export const classificationSchema = z.object({
   extractedFacts: factsSchema,
 });
 
+const BASE64 = /^[A-Za-z0-9+/]+={0,2}$/;
+
+export const documentSchema = z.object({
+  name: z.string().trim().min(1).max(255),
+  mimeType: z.string().refine(isAllowedMimeType, 'Unsupported file type'),
+  data: z.string().regex(BASE64, 'Not valid base64').refine(isWithinSizeLimit, 'File is too large'),
+});
+
 export const classifyRequestSchema = z.object({
   scenario: z.string().trim().min(10).max(5000),
+  document: documentSchema.optional(),
 });
 
 export const assessRequestSchema = z.object({

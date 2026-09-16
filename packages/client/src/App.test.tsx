@@ -28,6 +28,7 @@ const matched = (facts: Record<string, unknown>) => ({
   confidence: 0.9,
   facts,
   injectionFindings: [],
+  documentFindings: [],
 });
 
 const describeScenario = async (): Promise<void> => {
@@ -136,6 +137,75 @@ describe('App', () => {
     expect(screen.getByText('Karnataka')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: /Which state was the property in/ }));
     expect(await screen.findByLabelText('Which state was the property in?')).toBeInTheDocument();
+  });
+
+  it('sends an attached document with the scenario', async () => {
+    mockApi(matched(completeFacts));
+    render(<App />);
+
+    const file = new File(['agreement text'], 'agreement.pdf', { type: 'application/pdf' });
+    await userEvent.upload(screen.getByLabelText(/Have the document/), file);
+    expect(await screen.findByText('agreement.pdf')).toBeInTheDocument();
+
+    await describeScenario();
+    await waitFor(() => {
+      expect(screen.getByText('You can handle this yourself')).toBeInTheDocument();
+    });
+
+    // The first fetch is the catalogue GET, so pick the classify call.
+    const calls = (fetch as unknown as ReturnType<typeof vi.fn>).mock.calls;
+    const classify = calls.find(([path]) => path === '/api/classify');
+    expect(classify).toBeDefined();
+    const body = (classify?.[1] as RequestInit | undefined)?.body;
+    expect(typeof body).toBe('string');
+    expect(body as string).toContain('"document"');
+  });
+
+  it('lets the user remove an attached document', async () => {
+    mockApi(matched(completeFacts));
+    render(<App />);
+
+    const file = new File(['x'], 'agreement.pdf', { type: 'application/pdf' });
+    await userEvent.upload(screen.getByLabelText(/Have the document/), file);
+    await screen.findByText('agreement.pdf');
+
+    await userEvent.click(screen.getByRole('button', { name: /Remove/ }));
+    expect(screen.queryByText('agreement.pdf')).not.toBeInTheDocument();
+  });
+
+  it('refuses an oversized file before uploading it', async () => {
+    mockApi(matched(completeFacts));
+    render(<App />);
+
+    const huge = new File(['x'], 'huge.pdf', { type: 'application/pdf' });
+    Object.defineProperty(huge, 'size', { value: 5 * 1024 * 1024 });
+    await userEvent.upload(screen.getByLabelText(/Have the document/), huge);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('4 MB');
+    expect(screen.queryByText('huge.pdf')).not.toBeInTheDocument();
+  });
+
+  it('reports a file the browser could not read', async () => {
+    mockApi(matched(completeFacts));
+    render(<App />);
+    const empty = new File([], 'empty.pdf', { type: 'application/pdf' });
+    await userEvent.upload(screen.getByLabelText(/Have the document/), empty);
+    expect(await screen.findByRole('alert')).toHaveTextContent('empty');
+  });
+
+  it('shows the clauses the document turned up', async () => {
+    mockApi({
+      ...matched(completeFacts),
+      documentFindings: [
+        { clause: 'Deductions require itemised bills.', why: 'They gave you none.' },
+      ],
+    });
+    render(<App />);
+    await describeScenario();
+    await waitFor(() => {
+      expect(screen.getByText(/Deductions require itemised bills/)).toBeInTheDocument();
+    });
+    expect(screen.getByText('They gave you none.')).toBeInTheDocument();
   });
 
   it('stops and routes an out-of-scope situation to a professional', async () => {

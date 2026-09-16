@@ -13,6 +13,11 @@ const setup = (overrides: Partial<Parameters<typeof ScenarioForm>[0]> = {}) => {
       busy={false}
       onScenarioChange={onScenarioChange}
       onSubmit={onSubmit}
+      document={null}
+      documentSize={0}
+      documentError={null}
+      onAttachDocument={vi.fn()}
+      onClearDocument={vi.fn()}
       {...overrides}
     />,
   );

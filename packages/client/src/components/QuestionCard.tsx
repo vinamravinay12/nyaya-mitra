@@ -10,6 +10,7 @@ interface QuestionCardProps {
 const INPUT_TYPES: Record<FactKind, string> = {
   date: 'date',
   money: 'number',
+  number: 'number',
   text: 'text',
   enum: 'text',
   boolean: 'text',

@@ -1,6 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
 import { logWarning } from '../logging/log.js';
 import { LlmQuotaExceededError, type LlmClient, LlmUnavailableError } from './llm-client.js';
+import type { UploadedDocument } from '../documents/document.js';
 import { isQuotaExceeded, withRetry, type RetryOptions } from './retry.js';
 
 /** Gemini returns 503 "high demand" often enough that one attempt is not enough. */
@@ -40,13 +41,29 @@ export function createGeminiClient(
 ): LlmClient {
   const genai = new GoogleGenAI({ apiKey });
 
-  const callModel = (model: string, prompt: string): Promise<string> =>
+  const callModel = (
+    model: string,
+    prompt: string,
+    document: UploadedDocument | undefined,
+  ): Promise<string> =>
     withRetry(
       () =>
         genai.models
           .generateContent({
             model,
-            contents: prompt,
+            // Gemini reads PDFs and images directly, so a scanned or
+            // photographed agreement needs no parsing on our side.
+            contents: [
+              {
+                role: 'user',
+                parts: [
+                  { text: prompt },
+                  ...(document === undefined
+                    ? []
+                    : [{ inlineData: { mimeType: document.mimeType, data: document.data } }]),
+                ],
+              },
+            ],
             config: { temperature: 0.2, responseMimeType: 'application/json' },
           })
           .then((response) => response.text ?? ''),
@@ -54,12 +71,12 @@ export function createGeminiClient(
     );
 
   return {
-    async complete(prompt: string): Promise<string> {
+    async complete(prompt: string, document?: UploadedDocument): Promise<string> {
       let lastError: unknown;
 
       for (const model of models) {
         try {
-          return await callModel(model, prompt);
+          return await callModel(model, prompt, document);
         } catch (cause) {
           lastError = cause;
           // Logged in full here; the caller only ever tells the user "unavailable".

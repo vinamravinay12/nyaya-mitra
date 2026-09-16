@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import type { DecisiveFact } from '@nyaya-mitra/core';
 import {
   describeBand,
   formatDayRange,
@@ -48,22 +49,40 @@ describe('describeBand', () => {
 });
 
 describe('formatFactValue', () => {
-  it('renders a boolean as the word the user chose', () => {
-    expect(formatFactValue('boolean', true)).toBe('Yes');
-    expect(formatFactValue('boolean', false)).toBe('No');
+  const fact = (over: Partial<DecisiveFact>): DecisiveFact => ({
+    id: 'f',
+    kind: 'text',
+    question: 'q',
+    why: 'w',
+    required: true,
+    ...over,
   });
 
-  it('renders money in rupees but plain numbers as themselves', () => {
-    expect(formatFactValue('money', 80_000)).toBe('₹80,000');
-    expect(formatFactValue('text', 12)).toBe('12');
+  it('renders a boolean as the word the user chose', () => {
+    expect(formatFactValue(fact({ kind: 'boolean' }), true)).toBe('Yes');
+    expect(formatFactValue(fact({ kind: 'boolean' }), false)).toBe('No');
+  });
+
+  it('renders money in rupees', () => {
+    expect(formatFactValue(fact({ kind: 'money' }), 80_000)).toBe('₹80,000');
+  });
+
+  it('renders a quantity with its unit, not a rupee sign', () => {
+    // The bug this replaced showed a twelve-month restriction as "₹12".
+    expect(formatFactValue(fact({ kind: 'number', unit: 'months' }), 12)).toBe('12 months');
+    expect(formatFactValue(fact({ kind: 'number', unit: 'days' }), 90)).toBe('90 days');
+  });
+
+  it('renders a quantity with no unit as a bare number', () => {
+    expect(formatFactValue(fact({ kind: 'number' }), 12)).toBe('12');
   });
 
   it('passes text and dates through unchanged', () => {
-    expect(formatFactValue('text', 'Karnataka')).toBe('Karnataka');
-    expect(formatFactValue('date', '2026-07-01')).toBe('2026-07-01');
+    expect(formatFactValue(fact({}), 'Karnataka')).toBe('Karnataka');
+    expect(formatFactValue(fact({ kind: 'date' }), '2026-07-01')).toBe('2026-07-01');
   });
 
   it('renders a cleared answer as nothing rather than "null"', () => {
-    expect(formatFactValue('text', null)).toBe('');
+    expect(formatFactValue(fact({}), null)).toBe('');
   });
 });

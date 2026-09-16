@@ -59,6 +59,9 @@ X-Content-Type-Options: nosniff
 X-Frame-Options: DENY
 Referrer-Policy: no-referrer
 Cross-Origin-Resource-Policy: same-site
+Cross-Origin-Opener-Policy: same-origin
+X-Permitted-Cross-Domain-Policies: none
+Origin-Agent-Cluster: ?1
 Permissions-Policy: geolocation=(), camera=(), microphone=()
 ```
 
@@ -82,10 +85,34 @@ Case facts are held in browser memory for the duration of a session. There is no
 database, no account, and nothing is persisted server-side. Scenario text is sent
 to Gemini for classification — this is stated in the UI.
 
+## Rate limiting
+
+`/api/classify` and `/api/assess` are limited to 20 requests per minute per
+client, returning 429 with `Retry-After`. Health checks are not limited.
+
+Requests arrive through Firebase Hosting, so `request.ip` resolves to a Google
+edge address that **differs per request** — which gave every request its own
+bucket and defeated the limit entirely. It went unnoticed until the limiter was
+tested through the real entry point rather than directly against Cloud Run. The
+key is now the leftmost `X-Forwarded-For` entry, which is the original client
+however many proxies sit in between.
+
+That entry is client-settable. This limiter exists to stop one ordinary client
+exhausting the shared upstream model quota, not to withstand a deliberate
+attack; a shared store keyed on something stronger is the next step if that
+changes.
+
+## Response shaping
+
+The engine's structures carry the conditions that drive routes, red flags and
+limitation clocks. None of it is rendered and all of it is internal reasoning, so
+responses now pass through an explicit view layer
+([`public-assessment.ts`](../packages/server/src/views/public-assessment.ts)) that
+sends only the fields the UI reads. A test asserts no `appliesWhen` or
+`availableWhen` condition appears in any response.
+
 ## Known gaps
 
-- **No rate limiting on our own endpoints.** Upstream quota currently bounds
-  abuse, which is not a security control.
 - **No authentication.** Deliberate for an anonymous triage tool, but it means the
   API is open to anyone who can reach it.
 - **CSP covers the API only.** The client is served separately and needs its own

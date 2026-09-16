@@ -7,6 +7,7 @@ import {
   type IntakeProgress,
 } from '@nyaya-mitra/core';
 import { classifyScenario } from '../api/client.js';
+import { useDocument } from './use-document.js';
 import { messageOf, useAutoAssess, useCatalogue } from './use-session-effects.js';
 import {
   currentQuestion,
@@ -28,6 +29,8 @@ export interface Session {
   readonly rejectMatch: () => void;
   /** Re-ask a fact that has already been answered. */
   readonly changeAnswer: (factId: FactId) => void;
+  readonly attachDocument: (file: File) => void;
+  readonly clearDocument: () => void;
   /** Undo the last answer given here, or undefined when there is nothing to undo. */
   readonly goBack: (() => void) | undefined;
 }
@@ -52,14 +55,14 @@ export function useSession(): Session {
 
   const submitScenario = useCallback((): void => {
     dispatch({ type: 'request-started' });
-    classifyScenario(state.scenario)
+    classifyScenario(state.scenario, state.document)
       .then((response) => {
         dispatch({ type: 'classified', response });
       })
       .catch((error: unknown) => {
         dispatch({ type: 'failed', message: messageOf(error) });
       });
-  }, [state.scenario]);
+  }, [state.scenario, state.document]);
 
   const setScenario = useCallback((scenario: string): void => {
     dispatch({ type: 'scenario-changed', scenario });
@@ -83,6 +86,8 @@ export function useSession(): Session {
     dispatch({ type: 'answer-cleared', factId });
   }, []);
 
+  const { attachDocument, clearDocument } = useDocument(dispatch);
+
   const previousFactId = state.answerOrder.at(-1);
 
   const progress =
@@ -100,6 +105,8 @@ export function useSession(): Session {
     restart,
     rejectMatch,
     changeAnswer,
+    attachDocument,
+    clearDocument,
     // Undefined rather than a no-op, so the UI cannot render a dead button — and
     // so there is no unreachable "is there a previous question" guard inside it.
     goBack:

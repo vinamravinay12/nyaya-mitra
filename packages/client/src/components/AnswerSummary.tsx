@@ -44,9 +44,7 @@ export function AnswerSummary({
           <li key={fact.id} className="flex flex-wrap items-center justify-between gap-2 py-2.5">
             <span className="min-w-0">
               <span className="block text-sm text-muted">{fact.question}</span>
-              <span className="block font-medium text-ink">
-                {formatFactValue(fact.kind, value)}
-              </span>
+              <span className="block font-medium text-ink">{formatFactValue(fact, value)}</span>
             </span>
             <button
               type="button"

@@ -34,9 +34,34 @@ describe('createGeminiClient', () => {
     await expect(client.complete('prompt text')).resolves.toBe('{"ok":true}');
     expect(generateContent).toHaveBeenCalledWith({
       model: 'gemini-3.1-flash-lite',
-      contents: 'prompt text',
+      contents: [{ role: 'user', parts: [{ text: 'prompt text' }] }],
       config: { temperature: 0.2, responseMimeType: 'application/json' },
     });
+  });
+
+  it('attaches an uploaded document alongside the prompt', async () => {
+    generateContent.mockResolvedValue({ text: '{}' });
+    const client = createGeminiClient('k', ['gemini-3.1-flash-lite']);
+
+    await client.complete('prompt text', {
+      name: 'agreement.pdf',
+      mimeType: 'application/pdf',
+      data: 'QUJD',
+    });
+
+    expect(generateContent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        contents: [
+          {
+            role: 'user',
+            parts: [
+              { text: 'prompt text' },
+              { inlineData: { mimeType: 'application/pdf', data: 'QUJD' } },
+            ],
+          },
+        ],
+      }),
+    );
   });
 
   it('treats a response with no text as empty rather than crashing', async () => {

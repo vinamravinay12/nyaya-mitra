@@ -16,7 +16,7 @@ afterEach(() => {
 describe('classifyScenario', () => {
   it('posts the scenario and returns the parsed body', async () => {
     mockFetch(() => jsonResponse({ kind: 'out-of-scope', reason: 'Criminal matter.' }));
-    await expect(classifyScenario('I was arrested')).resolves.toEqual({
+    await expect(classifyScenario('I was arrested', null)).resolves.toEqual({
       kind: 'out-of-scope',
       reason: 'Criminal matter.',
     });
@@ -28,21 +28,49 @@ describe('classifyScenario', () => {
 
   it('explains a network failure in the user’s terms', async () => {
     mockFetch(() => Promise.reject(new TypeError('Failed to fetch')));
-    await expect(classifyScenario('x')).rejects.toBeInstanceOf(ApiError);
-    await expect(classifyScenario('x')).rejects.toThrow('could not reach');
+    await expect(classifyScenario('x', null)).rejects.toBeInstanceOf(ApiError);
+    await expect(classifyScenario('x', null)).rejects.toThrow('could not reach');
   });
 
   it('distinguishes a busy service from a generic failure', async () => {
     mockFetch(() => jsonResponse({}, 503));
-    await expect(classifyScenario('x')).rejects.toThrow('busy right now');
+    await expect(classifyScenario('x', null)).rejects.toThrow('busy right now');
 
     mockFetch(() => jsonResponse({}, 500));
-    await expect(classifyScenario('x')).rejects.toThrow('Something went wrong');
+    await expect(classifyScenario('x', null)).rejects.toThrow('Something went wrong');
+  });
+
+  it('explains an oversized upload rather than showing a generic failure', async () => {
+    mockFetch(() => jsonResponse({}, 413));
+    await expect(classifyScenario('x', null)).rejects.toThrow('too large');
+  });
+
+  it('sends the document alongside the scenario when one is attached', async () => {
+    mockFetch(() => jsonResponse({ kind: 'unrecognised', reason: 'x', covered: [] }));
+    const document = { name: 'a.pdf', mimeType: 'application/pdf', data: 'QUJD' };
+    await classifyScenario('My landlord kept my deposit', document);
+    expect(fetch).toHaveBeenCalledWith(
+      '/api/classify',
+      expect.objectContaining({
+        body: JSON.stringify({ scenario: 'My landlord kept my deposit', document }),
+      }),
+    );
+  });
+
+  it('omits the document key entirely when there is none', async () => {
+    mockFetch(() => jsonResponse({ kind: 'unrecognised', reason: 'x', covered: [] }));
+    await classifyScenario('My landlord kept my deposit', null);
+    expect(fetch).toHaveBeenCalledWith(
+      '/api/classify',
+      expect.objectContaining({
+        body: JSON.stringify({ scenario: 'My landlord kept my deposit' }),
+      }),
+    );
   });
 
   it('tells the user plainly when the daily quota is gone', async () => {
     mockFetch(() => jsonResponse({}, 429));
-    await expect(classifyScenario('x')).rejects.toThrow('usage limit for today');
+    await expect(classifyScenario('x', null)).rejects.toThrow('usage limit for today');
   });
 });
 

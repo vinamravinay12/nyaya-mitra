@@ -1,3 +1,4 @@
+import { memo } from 'react';
 const STEPS = [
   {
     n: '1',
@@ -16,7 +17,7 @@ const STEPS = [
   },
 ] as const;
 
-export function HowItWorks(): React.JSX.Element {
+function HowItWorksComponent(): React.JSX.Element {
   return (
     <section aria-labelledby="how-heading">
       <h2 id="how-heading" className="text-xs font-semibold tracking-widest text-muted uppercase">
@@ -39,3 +40,9 @@ export function HowItWorks(): React.JSX.Element {
     </section>
   );
 }
+
+/**
+ * Memoised: the scenario text lives in session state, so without this every
+ * keystroke in the textarea re-renders this whole section.
+ */
+export const HowItWorks = memo(HowItWorksComponent);

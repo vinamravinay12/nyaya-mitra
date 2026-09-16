@@ -10,12 +10,20 @@ export function classifyRouter(llm: LlmClient): Router {
   router.post('/classify', async (request, response) => {
     const parsed = classifyRequestSchema.safeParse(request.body);
     if (!parsed.success) {
-      response.status(400).json({ error: 'Describe your situation in 10 to 5000 characters.' });
+      response.status(400).json({
+        error:
+          'Describe your situation in 10 to 5000 characters. Any attached file must be a PDF, image or text file under 4 MB.',
+      });
       return;
     }
 
     try {
-      const outcome = await classifyScenario(llm, playbooks, parsed.data.scenario);
+      const outcome = await classifyScenario(
+        llm,
+        playbooks,
+        parsed.data.scenario,
+        parsed.data.document,
+      );
       response.json(outcome);
     } catch (cause) {
       if (cause instanceof LlmQuotaExceededError) {

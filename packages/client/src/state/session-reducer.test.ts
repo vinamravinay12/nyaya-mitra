@@ -19,6 +19,7 @@ const matched = {
   confidence: 0.9,
   facts: { state: 'Karnataka' },
   injectionFindings: [],
+  documentFindings: [],
 } as const;
 
 const answering: SessionState = sessionReducer(initialState, {
@@ -45,6 +46,60 @@ describe('sessionReducer', () => {
     expect(answering.playbook?.id).toBe(playbook.id);
     expect(answering.facts).toEqual({ state: 'Karnataka' });
     expect(answering.busy).toBe(false);
+  });
+
+  it('carries document findings through to the session', () => {
+    const next = sessionReducer(initialState, {
+      type: 'classified',
+      response: {
+        ...matched,
+        documentFindings: [{ clause: 'Clause 6.3', why: 'Deductions need itemised bills.' }],
+      },
+    });
+    expect(next.documentFindings).toHaveLength(1);
+  });
+
+  it('tolerates a response with no document findings field', () => {
+    const { documentFindings: _omitted, ...withoutFindings } = matched;
+    const next = sessionReducer(initialState, {
+      type: 'classified',
+      response: withoutFindings as typeof matched,
+    });
+    expect(next.documentFindings).toEqual([]);
+  });
+
+  it('attaches, replaces and clears a document', () => {
+    const document = { name: 'a.pdf', mimeType: 'application/pdf', data: 'QUJD' };
+    const attached = sessionReducer(initialState, {
+      type: 'document-attached',
+      document,
+      size: 2048,
+    });
+    expect(attached.document).toEqual(document);
+    expect(attached.documentSize).toBe(2048);
+
+    const cleared = sessionReducer(attached, { type: 'document-cleared' });
+    expect(cleared.document).toBeNull();
+    expect(cleared.documentSize).toBe(0);
+  });
+
+  it('reports a rejected file and keeps nothing attached', () => {
+    const rejected = sessionReducer(initialState, {
+      type: 'document-rejected',
+      message: 'That file is too large. The limit is 4 MB.',
+    });
+    expect(rejected.document).toBeNull();
+    expect(rejected.documentError).toContain('4 MB');
+  });
+
+  it('clears a previous error when a good file is attached', () => {
+    const rejected = sessionReducer(initialState, { type: 'document-rejected', message: 'bad' });
+    const fixed = sessionReducer(rejected, {
+      type: 'document-attached',
+      document: { name: 'a.pdf', mimeType: 'application/pdf', data: 'QUJD' },
+      size: 10,
+    });
+    expect(fixed.documentError).toBeNull();
   });
 
   it('refuses an out-of-scope situation with its reason', () => {

@@ -1,7 +1,7 @@
-import { useCallback, useRef } from 'react';
+import { Suspense, lazy, useCallback, useRef } from 'react';
 import type { Session } from '../state/use-session.js';
 import { AnswerSummary } from './AnswerSummary.js';
-import { AssessmentView } from './AssessmentView.js';
+import { DocumentFindings } from './DocumentFindings.js';
 import { ExampleScenarios } from './ExampleScenarios.js';
 import { Hero } from './Hero.js';
 import { HowItWorks } from './HowItWorks.js';
@@ -36,6 +36,11 @@ function DescribeStage({ session }: { readonly session: Session }): React.JSX.El
         onScenarioChange={setScenario}
         onSubmit={submitScenario}
         textareaRef={textarea}
+        document={state.document}
+        documentSize={state.documentSize}
+        documentError={state.documentError}
+        onAttachDocument={session.attachDocument}
+        onClearDocument={session.clearDocument}
       />
       <ExampleScenarios playbooks={state.catalogue} onPick={pickExample} />
       <HowItWorks />
@@ -69,6 +74,7 @@ function AnsweringStage({ session }: { readonly session: Session }): React.JSX.E
       )}
       <ProgressIndicator answered={progress.answered} total={progress.total} />
       <InjectionWarning findings={state.injectionFindings} />
+      <DocumentFindings findings={state.documentFindings} />
       {question !== undefined && (
         <QuestionCard
           // Keyed by fact so React remounts on each question. Without this the
@@ -102,6 +108,16 @@ function AnsweringStage({ session }: { readonly session: Session }): React.JSX.E
   );
 }
 
+/**
+ * The results view and everything it pulls in is only needed once a case has
+ * been assessed, which is several seconds and one network round trip after the
+ * first paint. Splitting it keeps the initial download to what the landing page
+ * actually uses.
+ */
+const AssessmentView = lazy(() =>
+  import('./AssessmentView.js').then((module) => ({ default: module.AssessmentView })),
+);
+
 /** Renders whichever step of the conversation the session is on. */
 export function StageView({ session }: { readonly session: Session }): React.JSX.Element | null {
   const { state } = session;
@@ -114,9 +130,12 @@ export function StageView({ session }: { readonly session: Session }): React.JSX
     case 'result':
       return state.assessment === null ? null : (
         <div className="space-y-8">
-          <AssessmentView assessment={state.assessment} />
+          <Suspense fallback={<p className="text-muted">Preparing your answer…</p>}>
+            <AssessmentView assessment={state.assessment} />
+          </Suspense>
           {/* Changing an answer here sends the user back to that one question and
               then straight to a fresh assessment. */}
+          <DocumentFindings findings={state.documentFindings} />
           <AnswerSummary
             facts={state.assessment.playbook.decisiveFacts}
             answers={state.facts}

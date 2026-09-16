@@ -16,6 +16,8 @@ const session = (state: Partial<SessionState>): Session => ({
   restart: vi.fn(),
   rejectMatch: vi.fn(),
   changeAnswer: vi.fn(),
+  attachDocument: vi.fn(),
+  clearDocument: vi.fn(),
   goBack: undefined,
 });
 
@@ -109,9 +111,10 @@ describe('StageView', () => {
     expect(screen.getByText(/looked like an instruction/)).toBeInTheDocument();
   });
 
-  it('renders the assessment once there is one', () => {
+  it('renders the assessment once there is one', async () => {
     render(<StageView session={session({ stage: 'result', assessment: buildAssessment() })} />);
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('security deposit');
+    // The results view is code-split, so it resolves a tick after render.
+    expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('security deposit');
   });
 
   it('renders nothing if the result stage is reached without an assessment', () => {

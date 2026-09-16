@@ -34,7 +34,8 @@ export const employmentWrongfulTermination: Playbook = {
     },
     {
       id: 'completedYears',
-      kind: 'money',
+      kind: 'number',
+      unit: 'years',
       question: 'How many complete years had you worked there?',
       why: 'Past one year of continuous service, retrenchment compensation becomes payable.',
       required: true,

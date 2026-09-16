@@ -1,7 +1,11 @@
 import type { CaseAssessment, CaseFacts } from '@nyaya-mitra/core';
+import type { UploadedDocument } from '../documents/read-file.js';
 import { ApiError, type ClassifyResponse, type PlaybookSummary } from './types.js';
 
 function messageForStatus(status: number): string {
+  if (status === 413) {
+    return 'That file is too large. The limit is 4 MB.';
+  }
   if (status === 429) {
     return 'The assistant has reached its usage limit for today. Please try again tomorrow.';
   }
@@ -30,8 +34,14 @@ async function postJson<T>(path: string, body: unknown): Promise<T> {
   return (await response.json()) as T;
 }
 
-export function classifyScenario(scenario: string): Promise<ClassifyResponse> {
-  return postJson<ClassifyResponse>('/api/classify', { scenario });
+export function classifyScenario(
+  scenario: string,
+  document: UploadedDocument | null,
+): Promise<ClassifyResponse> {
+  return postJson<ClassifyResponse>(
+    '/api/classify',
+    document === null ? { scenario } : { scenario, document },
+  );
 }
 
 export function requestAssessment(

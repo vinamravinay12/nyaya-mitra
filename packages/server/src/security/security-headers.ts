@@ -19,6 +19,9 @@ export function securityHeaders(allowedOrigin: string) {
     response.setHeader('X-Frame-Options', 'DENY');
     response.setHeader('Referrer-Policy', 'no-referrer');
     response.setHeader('Cross-Origin-Resource-Policy', 'same-site');
+    response.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+    response.setHeader('X-Permitted-Cross-Domain-Policies', 'none');
+    response.setHeader('Origin-Agent-Cluster', '?1');
     response.setHeader('Permissions-Policy', 'geolocation=(), camera=(), microphone=()');
     response.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
     response.setHeader('Access-Control-Allow-Origin', allowedOrigin);

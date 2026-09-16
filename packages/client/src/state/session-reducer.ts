@@ -1,75 +1,9 @@
-import {
-  nextQuestion,
-  type CaseAssessment,
-  type CaseFacts,
-  type DecisiveFact,
-  type FactId,
-  type FactValue,
-  type Playbook,
-} from '@nyaya-mitra/core';
-import type {
-  ClassifyResponse,
-  CoveredSituation,
-  InjectionFinding,
-  PlaybookSummary,
-} from '../api/types.js';
+import { nextQuestion, type DecisiveFact } from '@nyaya-mitra/core';
+import type { ClassifyResponse } from '../api/types.js';
+import { initialState, type SessionAction, type SessionState } from './session-state.js';
 
-export type Stage = 'describe' | 'answering' | 'result' | 'refused' | 'error';
-
-export interface SessionState {
-  readonly stage: Stage;
-  readonly busy: boolean;
-  readonly scenario: string;
-  readonly playbook: Playbook | null;
-  readonly facts: CaseFacts;
-  readonly assessment: CaseAssessment | null;
-  /** User-facing explanation for a refusal or a failure. */
-  readonly message: string | null;
-  readonly injectionFindings: readonly InjectionFinding[];
-  /**
-   * Facts answered here, in the order they were given.
-   *
-   * Facts extracted from the scenario are deliberately absent: "back" should
-   * undo something the user did, not silently discard what they wrote.
-   */
-  readonly answerOrder: readonly FactId[];
-  /** Populated on a miss, so the user is told what we do cover. */
-  readonly covered: readonly CoveredSituation[];
-  /**
-   * The situation catalogue for the landing-page examples.
-   *
-   * `null` means the fetch has not settled yet, which is distinct from an empty
-   * array meaning it settled with nothing. The UI reserves layout space while
-   * this is null so the examples do not shove the page down when they arrive.
-   */
-  readonly catalogue: readonly PlaybookSummary[] | null;
-}
-
-export type SessionAction =
-  | { readonly type: 'scenario-changed'; readonly scenario: string }
-  | { readonly type: 'request-started' }
-  | { readonly type: 'classified'; readonly response: ClassifyResponse }
-  | { readonly type: 'answered'; readonly factId: FactId; readonly value: FactValue }
-  | { readonly type: 'answer-cleared'; readonly factId: FactId }
-  | { readonly type: 'assessed'; readonly assessment: CaseAssessment }
-  | { readonly type: 'failed'; readonly message: string }
-  | { readonly type: 'catalogue-loaded'; readonly catalogue: readonly PlaybookSummary[] }
-  | { readonly type: 'match-rejected' }
-  | { readonly type: 'restarted' };
-
-export const initialState: SessionState = {
-  stage: 'describe',
-  busy: false,
-  scenario: '',
-  playbook: null,
-  facts: {},
-  assessment: null,
-  message: null,
-  injectionFindings: [],
-  answerOrder: [],
-  covered: [],
-  catalogue: null,
-};
+export { initialState };
+export type { SessionAction, SessionState, Stage } from './session-state.js';
 
 function applyClassification(state: SessionState, response: ClassifyResponse): SessionState {
   if (response.kind === 'matched') {
@@ -81,6 +15,9 @@ function applyClassification(state: SessionState, response: ClassifyResponse): S
       facts: response.facts,
       answerOrder: [],
       injectionFindings: response.injectionFindings,
+      // Defaulted rather than trusted: this crosses the network, and a missing
+      // field should not take the page down.
+      documentFindings: response.documentFindings ?? [],
       message: null,
     };
   }
@@ -91,6 +28,28 @@ function applyClassification(state: SessionState, response: ClassifyResponse): S
     message: response.reason,
     covered: response.kind === 'unrecognised' ? response.covered : [],
   };
+}
+
+type DocumentAction = Extract<
+  SessionAction,
+  { type: 'document-attached' | 'document-cleared' | 'document-rejected' }
+>;
+
+/** Split out to keep the main reducer within its complexity budget. */
+function applyDocumentAction(state: SessionState, action: DocumentAction): SessionState {
+  switch (action.type) {
+    case 'document-attached':
+      return {
+        ...state,
+        document: action.document,
+        documentSize: action.size,
+        documentError: null,
+      };
+    case 'document-cleared':
+      return { ...state, document: null, documentSize: 0, documentError: null };
+    case 'document-rejected':
+      return { ...state, document: null, documentSize: 0, documentError: action.message };
+  }
 }
 
 export function sessionReducer(state: SessionState, action: SessionAction): SessionState {
@@ -125,6 +84,10 @@ export function sessionReducer(state: SessionState, action: SessionAction): Sess
       return { ...state, busy: false, stage: 'result', assessment: action.assessment };
     case 'failed':
       return { ...state, busy: false, stage: 'error', message: action.message };
+    case 'document-attached':
+    case 'document-cleared':
+    case 'document-rejected':
+      return applyDocumentAction(state, action);
     case 'catalogue-loaded':
       return { ...state, catalogue: action.catalogue };
     case 'match-rejected':

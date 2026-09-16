@@ -10,6 +10,13 @@ import { buildClassificationPrompt } from '../prompts/build-classification-promp
 import { parseJsonResponse } from '../prompts/parse-json-response.js';
 import { classificationSchema } from '../validation/schemas.js';
 import {
+  readDocumentFindings,
+  readDocumentWarnings,
+  type DocumentFinding,
+} from './read-advisory.js';
+import type { UploadedDocument } from '../documents/document.js';
+import { toPublicPlaybook, type PublicPlaybook } from '../views/public-assessment.js';
+import {
   detectPromptInjection,
   type InjectionFinding,
 } from '../security/detect-prompt-injection.js';
@@ -25,6 +32,8 @@ import {
 export const MIN_CONFIDENCE = 0.6;
 
 /** What the engine can handle, sent back so a miss can say so constructively. */
+export type { DocumentFinding };
+
 export interface CoveredSituation {
   readonly id: string;
   readonly title: string;
@@ -39,10 +48,11 @@ export type ClassificationOutcome =
     }
   | {
       readonly kind: 'matched';
-      readonly playbook: Playbook;
+      readonly playbook: PublicPlaybook;
       readonly confidence: number;
       readonly facts: CaseFacts;
       readonly injectionFindings: readonly InjectionFinding[];
+      readonly documentFindings: readonly DocumentFinding[];
     };
 
 /**
@@ -59,6 +69,7 @@ export function isValidForFact(fact: DecisiveFact, value: FactValue): boolean {
     case 'boolean':
       return typeof value === 'boolean';
     case 'money':
+    case 'number':
       return typeof value === 'number' && Number.isFinite(value);
     case 'date':
       return typeof value === 'string' && parseIsoDate(value) !== undefined;
@@ -92,9 +103,16 @@ export async function classifyScenario(
   llm: LlmClient,
   playbooks: readonly Playbook[],
   scenario: string,
+  document?: UploadedDocument,
 ): Promise<ClassificationOutcome> {
-  const raw = await llm.complete(buildClassificationPrompt(playbooks, scenario));
-  const parsed = classificationSchema.safeParse(parseJsonResponse(raw));
+  const prompt = buildClassificationPrompt(playbooks, scenario, document !== undefined);
+  const raw = await llm.complete(prompt, document);
+  const body = parseJsonResponse(raw);
+  const parsed = classificationSchema.safeParse(body);
+  // Read separately and leniently: these must never invalidate a good match.
+  const advisory = body as { documentFindings?: unknown; documentWarnings?: unknown } | undefined;
+  const findings = readDocumentFindings(advisory?.documentFindings);
+  const warnings = readDocumentWarnings(advisory?.documentWarnings);
   const covered = playbooks.map(({ id, title }) => ({ id, title }));
 
   if (!parsed.success) {
@@ -128,9 +146,18 @@ export async function classifyScenario(
 
   return {
     kind: 'matched',
-    playbook,
+    playbook: toPublicPlaybook(playbook),
     confidence: result.confidence,
     facts: retainDeclaredFacts(playbook, result.extractedFacts),
-    injectionFindings: detectPromptInjection(scenario),
+    // The scenario is the user's own words. The document was written by the
+    // other side, so its quoted clauses are screened too.
+    injectionFindings: [
+      ...detectPromptInjection(scenario),
+      ...findings.flatMap((finding) => detectPromptInjection(finding.clause)),
+      // The model is asked to report text in the document aimed at an assistant.
+      // It already refuses to act on it; this is so the user is told it was there.
+      ...warnings.map((excerpt) => ({ rule: 'document-instruction', excerpt })),
+    ],
+    documentFindings: document === undefined ? [] : findings,
   };
 }

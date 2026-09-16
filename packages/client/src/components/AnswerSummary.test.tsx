@@ -19,6 +19,12 @@ const facts = [
   fact({ id: 'depositAmountInr', kind: 'money', question: 'How much deposit did you pay?' }),
   fact({ id: 'writtenAgreement', kind: 'boolean', question: 'Do you have a written agreement?' }),
   fact({ id: 'vacateDate', kind: 'date', question: 'When did you hand over possession?' }),
+  fact({
+    id: 'restrictionMonths',
+    kind: 'number',
+    unit: 'months',
+    question: 'For how many months does it apply?',
+  }),
   fact({ id: 'unanswered', question: 'Not answered yet?' }),
 ];
 
@@ -27,6 +33,7 @@ const answers = {
   depositAmountInr: 80_000,
   writtenAgreement: false,
   vacateDate: '2026-07-01',
+  restrictionMonths: 12,
 };
 
 describe('AnswerSummary', () => {
@@ -41,12 +48,15 @@ describe('AnswerSummary', () => {
     expect(screen.getByText('₹80,000')).toBeInTheDocument();
     expect(screen.getByText('No')).toBeInTheDocument();
     expect(screen.getByText('2026-07-01')).toBeInTheDocument();
+    // A duration must not be rendered as currency.
+    expect(screen.getByText('12 months')).toBeInTheDocument();
+    expect(screen.queryByText('₹12')).not.toBeInTheDocument();
   });
 
   it('lists only questions that have been answered', () => {
     render(<AnswerSummary facts={facts} answers={answers} onChange={vi.fn()} />);
     expect(screen.queryByText('Not answered yet?')).not.toBeInTheDocument();
-    expect(screen.getAllByRole('listitem')).toHaveLength(4);
+    expect(screen.getAllByRole('listitem')).toHaveLength(5);
   });
 
   it('treats a cleared answer as unanswered', () => {

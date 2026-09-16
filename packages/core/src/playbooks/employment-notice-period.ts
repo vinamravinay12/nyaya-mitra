@@ -35,7 +35,8 @@ export const employmentNoticePeriod: Playbook = {
     },
     {
       id: 'contractNoticeDays',
-      kind: 'money',
+      kind: 'number',
+      unit: 'days',
       question: 'How many days notice does your contract require?',
       why: 'A period far beyond the statutory norm is the part most open to challenge.',
       required: true,

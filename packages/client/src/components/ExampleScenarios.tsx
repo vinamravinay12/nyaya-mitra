@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import type { PlaybookSummary } from '../api/types.js';
 import {
   BagIcon,
@@ -110,7 +111,7 @@ function DomainGroup({
  * Grouping does double duty: it keeps twelve examples scannable, and the group
  * headings themselves communicate what the product covers.
  */
-export function ExampleScenarios({
+function ExampleScenariosComponent({
   playbooks,
   onPick,
 }: ExampleScenariosProps): React.JSX.Element | null {
@@ -139,3 +140,9 @@ export function ExampleScenarios({
     </section>
   );
 }
+
+/**
+ * Memoised: the scenario text lives in session state, so without this every
+ * keystroke in the textarea re-renders this whole section.
+ */
+export const ExampleScenarios = memo(ExampleScenariosComponent);

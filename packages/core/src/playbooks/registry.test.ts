@@ -91,6 +91,30 @@ describe.each(playbooks.map((playbook) => [playbook.id, playbook] as const))(
       }
     });
 
+    it('declares a unit for every quantity, and only for quantities', () => {
+      for (const fact of playbook.decisiveFacts) {
+        if (fact.kind === 'number') {
+          // Without a unit, "12" in the answer summary means nothing.
+          expect(fact.unit, `${fact.id} is a quantity with no unit`).toBeDefined();
+        } else {
+          expect(fact.unit, `${fact.id} is not a quantity but has a unit`).toBeUndefined();
+        }
+      }
+    });
+
+    it('uses the money kind only for rupee amounts', () => {
+      for (const fact of playbook.decisiveFacts) {
+        if (fact.kind !== 'money') {
+          continue;
+        }
+        // Durations and counts were once declared as money, which rendered a
+        // twelve-month restriction as "₹12".
+        expect(fact.id, `${fact.id} looks like a quantity, not an amount`).not.toMatch(
+          /(months|days|years|count|number)$/i,
+        );
+      }
+    });
+
     it('points its money fact at a money question it actually asks', () => {
       if (playbook.amountAtStakeFact === null) {
         return;

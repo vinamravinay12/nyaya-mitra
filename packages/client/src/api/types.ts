@@ -1,5 +1,10 @@
 import type { CaseFacts, Playbook } from '@nyaya-mitra/core';
 
+export interface DocumentFinding {
+  readonly clause: string;
+  readonly why: string;
+}
+
 export interface InjectionFinding {
   readonly rule: string;
   readonly excerpt: string;
@@ -30,6 +35,8 @@ export type ClassifyResponse =
       readonly confidence: number;
       readonly facts: CaseFacts;
       readonly injectionFindings: readonly InjectionFinding[];
+      /** Optional on the wire: a response without it must not break the page. */
+      readonly documentFindings?: readonly DocumentFinding[];
     };
 
 export class ApiError extends Error {

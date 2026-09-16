@@ -54,7 +54,8 @@ export const employmentPostEmploymentRestriction: Playbook = {
     },
     {
       id: 'restrictionMonths',
-      kind: 'money',
+      kind: 'number',
+      unit: 'months',
       question: 'For how many months does it apply?',
       why: 'Duration and breadth are what a court weighs if the clause is arguable rather than plainly void.',
       required: true,

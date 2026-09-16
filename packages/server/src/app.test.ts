@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import request from 'supertest';
-import { createApp } from './app.js';
+import { createApp, describeBodyError } from './app.js';
 import { loadConfig } from './config.js';
 import { createStubClient } from './llm/stub-client.js';
 import { LlmQuotaExceededError, LlmUnavailableError, type LlmClient } from './llm/llm-client.js';
@@ -41,6 +41,8 @@ describe('security headers', () => {
     expect(response.headers['x-content-type-options']).toBe('nosniff');
     expect(response.headers['x-frame-options']).toBe('DENY');
     expect(response.headers['referrer-policy']).toBe('no-referrer');
+    expect(response.headers['cross-origin-opener-policy']).toBe('same-origin');
+    expect(response.headers['x-permitted-cross-domain-policies']).toBe('none');
     expect(response.headers['strict-transport-security']).toContain('max-age=');
   });
 
@@ -52,6 +54,16 @@ describe('security headers', () => {
   it('answers a preflight without running a handler', async () => {
     const response = await request(appWith()).options('/api/classify');
     expect(response.status).toBe(204);
+  });
+});
+
+describe('compression', () => {
+  it('compresses a response when the client asks for it', async () => {
+    const response = await request(appWith())
+      .post('/api/assess')
+      .set('Accept-Encoding', 'gzip')
+      .send({ playbookId: 'rental.deposit_withheld', facts: {}, today: '2026-09-16' });
+    expect(response.headers['content-encoding']).toBe('gzip');
   });
 });
 
@@ -161,6 +173,110 @@ describe('POST /api/assess', () => {
       .post('/api/assess')
       .send({ playbookId: 'nope', facts: {}, today: '2026-09-14' });
     expect(response.status).toBe(404);
+  });
+});
+
+describe('POST /api/classify with a document', () => {
+  const pdf = { name: 'agreement.pdf', mimeType: 'application/pdf', data: 'QUJD' };
+  const scenario = 'My landlord is keeping my deposit after I moved out.';
+
+  it('accepts a supported document alongside the scenario', async () => {
+    const response = await request(appWith())
+      .post('/api/classify')
+      .send({ scenario, document: pdf });
+    expect(response.status).toBe(200);
+  });
+
+  it('rejects a file type we cannot safely read', async () => {
+    const response = await request(appWith())
+      .post('/api/classify')
+      .send({ scenario, document: { ...pdf, name: 'x.html', mimeType: 'text/html' } });
+    expect(response.status).toBe(400);
+  });
+
+  it('rejects a file just over the document limit with a clear message', async () => {
+    const overLimit = Buffer.alloc(4 * 1024 * 1024 + 1024).toString('base64');
+    const response = await request(appWith())
+      .post('/api/classify')
+      .send({ scenario, document: { ...pdf, data: overLimit } });
+    expect(response.status).toBe(400);
+    expect(response.body.error).toContain('4 MB');
+  });
+
+  it('explains an upload too large to even parse, rather than failing opaquely', async () => {
+    const huge = Buffer.alloc(7 * 1024 * 1024).toString('base64');
+    const response = await request(appWith())
+      .post('/api/classify')
+      .send({ scenario, document: { ...pdf, data: huge } });
+    expect(response.status).toBe(413);
+    expect(response.body.error).toContain('too large');
+  });
+
+  it('rejects data that is not base64', async () => {
+    const response = await request(appWith())
+      .post('/api/classify')
+      .send({ scenario, document: { ...pdf, data: 'not base64!!' } });
+    expect(response.status).toBe(400);
+  });
+
+  it('still works with no document attached', async () => {
+    const response = await request(appWith()).post('/api/classify').send({ scenario });
+    expect(response.status).toBe(200);
+  });
+});
+
+describe('rate limiting', () => {
+  it('turns away a client that floods the assessment endpoint', async () => {
+    const app = appWith();
+    const send = () =>
+      request(app)
+        .post('/api/assess')
+        .send({ playbookId: 'rental.deposit_withheld', facts: {}, today: '2026-09-16' });
+
+    let limited: number | undefined;
+    for (let i = 0; i < 25; i += 1) {
+      const response = await send();
+      if (response.status === 429) {
+        limited = i;
+        break;
+      }
+    }
+    expect(limited).toBeDefined();
+  });
+
+  it('never rate limits the health check', async () => {
+    const app = appWith();
+    for (let i = 0; i < 25; i += 1) {
+      await request(app).get('/api/health');
+    }
+    expect((await request(app).get('/api/health')).status).toBe(200);
+  });
+});
+
+describe('describeBodyError', () => {
+  it('recognises a malformed JSON body', () => {
+    const error = Object.assign(new SyntaxError('bad json'), { body: '{' });
+    expect(describeBodyError(error)).toEqual({
+      status: 400,
+      message: 'Request body must be valid JSON.',
+    });
+  });
+
+  it('recognises a body too large to parse', () => {
+    expect(describeBodyError({ type: 'entity.too.large' })?.status).toBe(413);
+  });
+
+  it('does not mistake another parser failure for an oversized upload', () => {
+    // Anything else must fall through to a generic 500, not a misleading 413.
+    expect(describeBodyError({ type: 'encoding.unsupported' })).toBeUndefined();
+    expect(describeBodyError({ type: 'charset.unsupported' })).toBeUndefined();
+  });
+
+  it('does not recognise an ordinary error', () => {
+    expect(describeBodyError(new Error('boom'))).toBeUndefined();
+    expect(describeBodyError(null)).toBeUndefined();
+    expect(describeBodyError('a string')).toBeUndefined();
+    expect(describeBodyError(new SyntaxError('no body property'))).toBeUndefined();
   });
 });
 

@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { ShieldIcon } from '../icons/index.js';
 
 const OUT_OF_SCOPE = [
@@ -13,7 +14,7 @@ const OUT_OF_SCOPE = [
  * Someone with a custody question should find that out before describing
  * something painful to a tool that cannot help them.
  */
-export function ScopeNote(): React.JSX.Element {
+function ScopeNoteComponent(): React.JSX.Element {
   return (
     <section aria-labelledby="scope-heading" className="card bg-accent-soft/60 p-5">
       <h2 id="scope-heading" className="flex items-center gap-2 font-semibold text-ink">
@@ -36,3 +37,9 @@ export function ScopeNote(): React.JSX.Element {
     </section>
   );
 }
+
+/**
+ * Memoised: the scenario text lives in session state, so without this every
+ * keystroke in the textarea re-renders this whole section.
+ */
+export const ScopeNote = memo(ScopeNoteComponent);
