@@ -14,7 +14,7 @@ export const employmentDocumentsWithheld: Playbook = {
   domain: 'employment',
   title: 'My employer is withholding my relieving letter',
   summary:
-    'Relieving letter, experience certificate, Form 16 or dues are being held back, often over a notice period or a bond.',
+    'You have already left, and the relieving letter, experience certificate, Form 16 or final dues are being held back.',
   examplePrompt:
     'I resigned and served one month but my company will not give me a relieving letter unless I pay them two months of salary for the notice period.',
 

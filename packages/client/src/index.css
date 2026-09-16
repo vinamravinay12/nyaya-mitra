@@ -98,7 +98,7 @@
     --color-danger-bg: oklch(0.26 0.07 25);
     --color-danger-border: oklch(0.55 0.16 25);
     --color-danger-fg: oklch(0.92 0.06 25);
-    --color-danger-solid: oklch(0.62 0.2 25);
+    --color-danger-solid: oklch(0.68 0.19 25);
   }
 }
 
@@ -138,7 +138,7 @@
   --color-danger-bg: oklch(0.26 0.07 25);
   --color-danger-border: oklch(0.55 0.16 25);
   --color-danger-fg: oklch(0.92 0.06 25);
-  --color-danger-solid: oklch(0.62 0.2 25);
+  --color-danger-solid: oklch(0.68 0.19 25);
 }
 
 :root[data-theme='light'] {

@@ -2,6 +2,7 @@ import type { Playbook } from '../types/playbook.js';
 import { consumerDefectivePurchase } from './consumer-defective-purchase.js';
 import { cyberUnauthorisedTransaction } from './cyber-unauthorised-transaction.js';
 import { employmentDocumentsWithheld } from './employment-documents-withheld.js';
+import { employmentNoticePeriod } from './employment-notice-period.js';
 import { employmentPfNotDeposited } from './employment-pf-not-deposited.js';
 import { employmentPostEmploymentRestriction } from './employment-post-employment-restriction.js';
 import { employmentUnpaidSalary } from './employment-unpaid-salary.js';
@@ -26,6 +27,7 @@ export const playbooks: readonly Playbook[] = [
   societyBuilderDelay,
   employmentUnpaidSalary,
   employmentWrongfulTermination,
+  employmentNoticePeriod,
   employmentDocumentsWithheld,
   employmentPfNotDeposited,
   employmentPostEmploymentRestriction,

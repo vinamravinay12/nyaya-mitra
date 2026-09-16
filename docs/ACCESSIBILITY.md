@@ -62,6 +62,34 @@ because jsdom has no layout engine: the axe assertions in the test suite
 structurally cannot see touch-target size (WCAG 2.5.8) or computed colour
 contrast, and only a real browser can.
 
+### Light and dark
+
+The page follows the reader's system setting, with an explicit Light / System /
+Dark control that overrides it. `system` removes the theme attribute rather than
+resolving it, leaving the CSS media query in charge — that is what keeps the
+first paint correct without an inline script, which the strict CSP forbids.
+
+`color-scheme` is set per theme, so native controls — the date picker in
+particular — render correctly rather than staying stubbornly light on a dark page.
+
+Status colours (urgency bands, deadline chips, effort levels) are **semantic
+tokens**, not raw palette classes, so every surface that conveys urgency themes
+together instead of one component at a time.
+
+**Both themes are verified, not assumed.** Lighthouse only audits the light
+theme, so the dark palette's contrast ratios are computed directly from the
+tokens — oklch converted to linear sRGB, then WCAG relative luminance. Fifteen
+foreground/background pairs are checked in each theme:
+
+| Theme | Lowest ratio |
+| :---- | -----------: |
+| Light |       5.16:1 |
+| Dark  |       5.07:1 |
+
+Both clear the 4.5:1 AA minimum for body text. The check caught one dark pair at
+4.32:1 — the fill behind an urgent icon, which would have passed the 3:1 non-text
+rule but not the text one; it was lightened rather than argued about.
+
 ### Contrast is a token-level guarantee
 
 `--color-muted` is set so that secondary text clears 4.5:1 on **every** surface

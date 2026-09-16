@@ -13,7 +13,7 @@ if (usingStub) {
 }
 
 const llm =
-  geminiApiKey === null ? createStubClient() : createGeminiClient(geminiApiKey, config.model);
+  geminiApiKey === null ? createStubClient() : createGeminiClient(geminiApiKey, config.models);
 
 createApp({ llm, config, usingStub }).listen(config.port, () => {
   console.log(`Nyaya Mitra API listening on ${String(config.port)}`);

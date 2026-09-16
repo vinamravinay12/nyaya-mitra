@@ -1,11 +1,14 @@
 import { Disclaimer } from './components/Disclaimer.js';
+import { ThemeToggle } from './components/ThemeToggle.js';
 import { ScaleIcon } from './icons/index.js';
 import { SkipLink } from './components/SkipLink.js';
 import { StageView } from './components/StageView.js';
 import { useSession } from './state/use-session.js';
+import { useTheme } from './state/use-theme.js';
 
 export function App(): React.JSX.Element {
   const session = useSession();
+  const theme = useTheme();
 
   return (
     <>
@@ -15,12 +18,13 @@ export function App(): React.JSX.Element {
           <span className="inline-flex size-9 items-center justify-center rounded-xl bg-brand text-card">
             <ScaleIcon className="size-5" />
           </span>
-          <span>
+          <span className="mr-auto">
             <span className="block leading-tight font-semibold text-ink">Nyaya Mitra</span>
             <span className="block text-xs leading-tight text-muted">
               Everyday legal problems in India
             </span>
           </span>
+          <ThemeToggle preference={theme.preference} onChange={theme.setPreference} />
         </header>
 
         <main id="main" className="space-y-8">
